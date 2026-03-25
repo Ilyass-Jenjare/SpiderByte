@@ -1,0 +1,90 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: spideruser
+      POSTGRES_PASSWORD: spiderpassword
+      POSTGRES_DB: spiderbyte_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Ajout d'un healthcheck pour s'assurer que PostgreSQL est prêt
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spideruser -d spiderbyte_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    volumes:
+      - .:/app
+    command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      #  AJOUT CRUCIAL : la variable DATABASE_URL manquait !
+      - DATABASE_URL=postgresql://spideruser:spiderpassword@db:5432/spiderbyte_db
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      db:
+        condition: service_healthy  # Attend que PostgreSQL soit prêt
+      redis:
+        condition: service_started
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app/frontend
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_started
+
+  worker:
+    build: ./backend
+    volumes:
+      - .:/app
+    command: celery -A backend.worker.celery_app worker --loglevel=info
+    environment:
+      - PYTHONPATH=/app
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://spideruser:spiderpassword@db:5432/spiderbyte_db
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1   
+    depends_on:
+      selenium-hub :
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  # 4. configuration de selenium
+  selenium-hub:
+    image: selenium/standalone-chrome:4.7.2-20221219
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC pour visualiser le navigateur
+    environment:
+      - SE_NODE_MAX_INSTANCES=5
+      - SE_NODE_MAX_SESSION=5
+    shm_size: 2gb
+volumes:
+  postgres_data:
