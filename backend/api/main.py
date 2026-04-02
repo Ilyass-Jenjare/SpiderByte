@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from fastapi import FastAPI, HTTPException, Depends, status, Response
+from fastapi import FastAPI, HTTPException, Depends, status, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from celery.result import AsyncResult
@@ -136,7 +136,7 @@ def login(response: Response,
 
 # Routes GET 
 @app.get('/')
-def read_root():
+def read_root(request: Request):
     return {"message": "Bienvenue à l'API SpiderByte v2 (Architecture Plugin)"}
 
 # --- Route de Statut : Vérifier l'avancement ---

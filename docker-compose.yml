@@ -27,8 +27,8 @@ services:
     volumes:
       - .:/app
     command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
     environment:
       - PYTHONPATH=/app
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -36,6 +36,12 @@ services:
       #  AJOUT CRUCIAL : la variable DATABASE_URL manquait !
       - DATABASE_URL=postgresql://spideruser:spiderpassword@db:5432/spiderbyte_db
       - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
     depends_on:
       db:
         condition: service_healthy  # Attend que PostgreSQL soit prêt
@@ -49,9 +55,9 @@ services:
       - .:/app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
-    ports:
-      - "5173:5173"
+      - VITE_API_BASE_URL=/api
+    # ports:
+    #   - "5173:5173"
     depends_on:
       api:
         condition: service_started
@@ -86,5 +92,17 @@ services:
       - SE_NODE_MAX_INSTANCES=5
       - SE_NODE_MAX_SESSION=5
     shm_size: 2gb
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy  # Attend que l'API soit prête avant de démarrer Nginx
+      frontend:
+        condition: service_started
+
 volumes:
   postgres_data:
