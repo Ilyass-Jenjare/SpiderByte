@@ -14,47 +14,33 @@ const MODULE_LABELS = {
   legacy: "Legacy",
 };
 
+// Poids des sévérités pour forcer le tri (High en haut, Info en bas)
+const SEVERITY_RANK = { high: 4, medium: 3, low: 2, info: 1 };
+
 function normalizeSeverity(value) {
   const normalized = String(value || "info").toLowerCase();
-  if (normalized === "critical") {
-    return "high";
-  }
-  if (normalized === "moderate") {
-    return "medium";
-  }
-  if (normalized === "informational") {
-    return "info";
-  }
-  if (["high", "medium", "low", "info"].includes(normalized)) {
-    return normalized;
-  }
+  if (normalized === "critical") return "high";
+  if (normalized === "moderate") return "medium";
+  if (normalized === "informational") return "info";
+  if (["high", "medium", "low", "info"].includes(normalized)) return normalized;
   return "info";
 }
 
 function severityBadgeTone(severity) {
-  if (severity === "high") {
-    return "border-red-400/50 bg-red-500/20 text-red-200";
-  }
-  if (severity === "medium") {
-    return "border-orange-400/50 bg-orange-500/20 text-orange-200";
-  }
-  if (severity === "low") {
-    return "border-emerald-400/50 bg-emerald-500/20 text-emerald-200";
-  }
+  if (severity === "high") return "border-red-400/50 bg-red-500/20 text-red-200";
+  if (severity === "medium") return "border-orange-400/50 bg-orange-500/20 text-orange-200";
+  if (severity === "low") return "border-emerald-400/50 bg-emerald-500/20 text-emerald-200";
   return "border-sky-400/50 bg-sky-500/20 text-sky-200";
 }
 
 function formatDateTime(value) {
   const date = value ? new Date(value) : new Date();
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString();
 }
 
 function formatStatus(status) {
-  const normalized = String(status || "unknown").trim();
-  return normalized ? normalized.toUpperCase() : "UNKNOWN";
+  return String(status || "unknown").trim().toUpperCase() || "UNKNOWN";
 }
 
 function toNumber(value, fallback = 0) {
@@ -64,17 +50,12 @@ function toNumber(value, fallback = 0) {
 
 function normalizePayloads(details) {
   const payloads = Array.isArray(details?.payloads) ? [...details.payloads] : [];
-  if (details?.payload) {
-    payloads.unshift(details.payload);
-  }
-
+  if (details?.payload) payloads.unshift(details.payload);
   const seen = new Set();
   const unique = [];
   payloads.forEach((payload) => {
     const normalized = String(payload || "").trim();
-    if (!normalized || seen.has(normalized)) {
-      return;
-    }
+    if (!normalized || seen.has(normalized)) return;
     seen.add(normalized);
     unique.push(normalized);
   });
@@ -94,21 +75,15 @@ function summarizeFromFindings(findings) {
   const summary = { total: findings.length, high: 0, medium: 0, low: 0, info: 0 };
   findings.forEach((finding) => {
     const severity = normalizeSeverity(finding.severity);
-    if (summary[severity] !== undefined) {
-      summary[severity] += 1;
-    } else {
-      summary.info += 1;
-    }
+    if (summary[severity] !== undefined) summary[severity] += 1;
+    else summary.info += 1;
   });
   return summary;
 }
 
 function normalizeSummary(summary, vulnerabilities) {
   const fallback = summarizeFromFindings(vulnerabilities);
-  if (!summary || typeof summary !== "object") {
-    return fallback;
-  }
-
+  if (!summary || typeof summary !== "object") return fallback;
   return {
     total: Number(summary.total ?? fallback.total) || 0,
     high: Number(summary.high ?? fallback.high) || 0,
@@ -160,19 +135,13 @@ function ScanCard({ scan, isActive, onSelect }) {
       </div>
 
       <div className="mt-4 grid gap-3 text-sm text-zinc-300 sm:grid-cols-2">
-        <p>
-          <span className="text-zinc-500">Date:</span> {formatDateTime(scan.createdAt)}
-        </p>
-        <p>
-          <span className="text-zinc-500">Total vulnerabilities:</span> {summary.total}
-        </p>
+        <p><span className="text-zinc-500">Date:</span> {formatDateTime(scan.createdAt)}</p>
+        <p><span className="text-zinc-500">Total vulnerabilities:</span> {summary.total}</p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <span className="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs text-red-200">HIGH {summary.high}</span>
-        <span className="rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1 text-xs text-orange-200">
-          MEDIUM {summary.medium}
-        </span>
+        <span className="rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1 text-xs text-orange-200">MEDIUM {summary.medium}</span>
         <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">LOW {summary.low}</span>
         <span className="rounded-full border border-sky-400/40 bg-sky-500/10 px-3 py-1 text-xs text-sky-200">INFO {summary.info}</span>
       </div>
@@ -193,16 +162,20 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
   const severity = normalizeSeverity(vulnerability.severity);
   const badgeTone = severityBadgeTone(severity);
   const payloads = normalizePayloads(vulnerability.details || {});
-  const payloadCount = Math.max(
-    toNumber(vulnerability?.details?.countPayloads, payloads.length),
-    payloads.length,
-  );
+  const payloadCount = Math.max(toNumber(vulnerability?.details?.countPayloads, payloads.length), payloads.length);
   const isSqlFinding = vulnerability.module === "sql_injection";
 
   return (
     <article className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 text-left transition duration-300 hover:border-zinc-600 hover:bg-zinc-900">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h4 className="text-sm font-semibold text-white">{vulnerability.name || "Vulnerability"}</h4>
+        <div className="flex items-center gap-3">
+          <h4 className="text-base font-semibold text-white">{vulnerability.displayName || vulnerability.name}</h4>
+          {vulnerability.count > 1 && (
+            <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-300">
+              x{vulnerability.count} instances
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeTone}`}>{severity}</span>
           <button
@@ -214,13 +187,18 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
           </button>
         </div>
       </div>
-      <p className="mt-2 text-xs uppercase tracking-wide text-zinc-500">{vulnerability.vulnerabilityType || "General"}</p>
-      <p className="mt-2 text-sm text-zinc-300">{vulnerability.description || "No description."}</p>
+      
+      <div className="mt-2 flex items-center gap-3 text-xs">
+        <span className="uppercase tracking-wide text-zinc-500">{vulnerability.vulnerabilityType || "General"}</span>
+        <span className="text-zinc-600">•</span>
+        <span className="text-zinc-400">{vulnerability.moduleLabel}</span>
+      </div>
+
+      <p className="mt-3 text-sm text-zinc-300">{vulnerability.description || "No description."}</p>
+      
       {isSqlFinding ? (
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/70 p-3">
-          <p className="text-xs text-zinc-300">
-            {payloadCount} payload(s) exploitable(s)
-          </p>
+          <p className="text-xs text-zinc-300">{payloadCount} payload(s) exploitable(s)</p>
           {payloads.length ? (
             <details className="mt-2">
               <summary className="cursor-pointer text-xs text-zinc-400 transition hover:text-zinc-200">
@@ -228,7 +206,7 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
               </summary>
               <ul className="mt-2 space-y-1">
                 {payloads.map((payload, index) => (
-                  <li key={`${vulnerability.id}-payload-${index}`} className="rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 font-mono text-xs text-zinc-300">
+                  <li key={`payload-${index}`} className="rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 font-mono text-xs text-zinc-300">
                     {payload}
                   </li>
                 ))}
@@ -237,7 +215,12 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
           ) : null}
         </div>
       ) : null}
-      <p className="mt-3 truncate font-mono text-xs text-zinc-400">{vulnerability.targetUrl || "-"}</p>
+      
+      {vulnerability.count === 1 ? (
+        <p className="mt-3 truncate font-mono text-xs text-zinc-400">Target: {vulnerability.targetUrl || "-"}</p>
+      ) : (
+        <p className="mt-3 truncate font-mono text-xs text-zinc-400">Affects {vulnerability.count} distinct endpoints (See details)</p>
+      )}
     </article>
   );
 }
@@ -245,62 +228,84 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
 export default function Dashboard() {
   const { scans, activeScan, activeScanId, selectScan } = useScan();
   const [selectedVulnerability, setSelectedVulnerability] = useState(null);
+  
+  // NOUVEAU : État pour gérer le mode de vue (Par Sévérité ou Par Module)
+  const [viewMode, setViewMode] = useState("severity"); 
 
-  const vulnerabilities = useMemo(() => {
-    if (!activeScan) {
-      return [];
-    }
-    if (Array.isArray(activeScan.findings)) {
-      return activeScan.findings;
-    }
+  const rawVulnerabilities = useMemo(() => {
+    if (!activeScan) return [];
+    if (Array.isArray(activeScan.findings)) return activeScan.findings;
     if (Array.isArray(activeScan.vulnerabilities)) {
-      return activeScan.vulnerabilities.map((item) => normalizeLegacyToFinding(item, activeScan.target || activeScan.url || "-"));
+      return activeScan.vulnerabilities.map((item) => normalizeLegacyToFinding(item, activeScan.target || "-"));
     }
     return [];
   }, [activeScan]);
 
-  const scanSummary = useMemo(() => normalizeSummary(activeScan?.summary, vulnerabilities), [activeScan?.summary, vulnerabilities]);
+  const scanSummary = useMemo(() => normalizeSummary(activeScan?.summary, rawVulnerabilities), [activeScan?.summary, rawVulnerabilities]);
+  
   const sqlSummary = useMemo(() => {
-    const sqlFindings = vulnerabilities.filter((vulnerability) => vulnerability.module === "sql_injection");
-    const derivedPayloads = sqlFindings.reduce((sum, vulnerability) => {
-      const payloads = normalizePayloads(vulnerability.details || {});
-      const count = Math.max(toNumber(vulnerability?.details?.countPayloads, payloads.length), payloads.length);
-      return sum + count;
+    const sqlFindings = rawVulnerabilities.filter((v) => v.module === "sql_injection");
+    const derivedPayloads = sqlFindings.reduce((sum, v) => {
+      const payloads = normalizePayloads(v.details || {});
+      return sum + Math.max(toNumber(v?.details?.countPayloads, payloads.length), payloads.length);
     }, 0);
-
     return {
-      totalVulnerabilities: Math.max(
-        toNumber(activeScan?.sqlMetrics?.totalVulnerabilities, sqlFindings.length),
-        sqlFindings.length,
-      ),
+      totalVulnerabilities: Math.max(toNumber(activeScan?.sqlMetrics?.totalVulnerabilities, sqlFindings.length), sqlFindings.length),
       totalPayloads: Math.max(toNumber(activeScan?.sqlMetrics?.totalPayloads, derivedPayloads), derivedPayloads),
     };
-  }, [activeScan?.sqlMetrics, vulnerabilities]);
+  }, [activeScan?.sqlMetrics, rawVulnerabilities]);
 
+  // NOUVEAU : Dédoublonnage intelligent des alertes
+  const aggregatedVulnerabilities = useMemo(() => {
+    const map = new Map();
+    rawVulnerabilities.forEach((v) => {
+      // On regroupe par module et par nom de base (on enlève l'URL du nom pour les grouper)
+      const baseName = (v.name || "").split(' · ')[0];
+      const key = `${v.module}-${baseName}`;
+
+      if (!map.has(key)) {
+        map.set(key, { ...v, displayName: baseName, count: 1, endpoints: new Set([v.targetUrl]) });
+      } else {
+        const existing = map.get(key);
+        existing.count += 1;
+        if (v.targetUrl) existing.endpoints.add(v.targetUrl);
+      }
+    });
+
+    return Array.from(map.values()).map(v => ({
+      ...v,
+      endpointsList: Array.from(v.endpoints) // Utilisé dans les détails
+    }));
+  }, [rawVulnerabilities]);
+
+  // NOUVEAU : Groupement en fonction du viewMode choisi
   const groupedVulnerabilities = useMemo(() => {
     const groups = new Map();
-    vulnerabilities.forEach((vulnerability) => {
-      const key = vulnerability.module || "legacy";
-      if (!groups.has(key)) {
-        groups.set(key, []);
-      }
-      groups.get(key).push(vulnerability);
+    
+    aggregatedVulnerabilities.forEach((v) => {
+      const groupKey = viewMode === "severity" ? normalizeSeverity(v.severity) : (v.module || "legacy");
+      if (!groups.has(groupKey)) groups.set(groupKey, []);
+      groups.get(groupKey).push(v);
+    });
+
+    // Tri à l'intérieur de chaque groupe par Sévérité
+    groups.forEach((vulns) => {
+      vulns.sort((a, b) => SEVERITY_RANK[normalizeSeverity(b.severity)] - SEVERITY_RANK[normalizeSeverity(a.severity)]);
     });
 
     const ordered = [];
-    MODULE_ORDER.forEach((key) => {
-      if (groups.has(key)) {
-        ordered.push([key, groups.get(key)]);
-        groups.delete(key);
-      }
-    });
-
-    groups.forEach((value, key) => {
-      ordered.push([key, value]);
-    });
+    if (viewMode === "severity") {
+      ["high", "medium", "low", "info"].forEach(sev => {
+        if (groups.has(sev)) ordered.push([sev.toUpperCase(), groups.get(sev)]);
+      });
+    } else {
+      MODULE_ORDER.forEach(mod => {
+        if (groups.has(mod)) ordered.push([MODULE_LABELS[mod] || mod, groups.get(mod)]);
+      });
+    }
 
     return ordered;
-  }, [vulnerabilities]);
+  }, [aggregatedVulnerabilities, viewMode]);
 
   useEffect(() => {
     setSelectedVulnerability(null);
@@ -312,9 +317,7 @@ export default function Dashboard() {
         <h1 className="text-3xl font-semibold text-white">Reports Dashboard</h1>
         <article className="glass-panel soft-ring rounded-2xl p-6">
           <p className="text-zinc-300">No scan results yet. Launch your first scan from the landing page.</p>
-          <Link to="/" className="accent-button mt-4 inline-flex">
-            Go to Scanner
-          </Link>
+          <Link to="/" className="accent-button mt-4 inline-flex">Go to Scanner</Link>
         </article>
       </section>
     );
@@ -334,12 +337,7 @@ export default function Dashboard() {
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {scans.map((scan) => (
-            <ScanCard
-              key={scan.id}
-              scan={scan}
-              isActive={scan.id === activeScanId}
-              onSelect={() => selectScan(scan.id)}
-            />
+            <ScanCard key={scan.id} scan={scan} isActive={scan.id === activeScanId} onSelect={() => selectScan(scan.id)} />
           ))}
         </div>
       </article>
@@ -361,60 +359,65 @@ export default function Dashboard() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <SummaryCard label="Total vulnerabilities" value={scanSummary.total} tone="text-white" />
-            <SummaryCard label="Exploitable payloads" value={sqlSummary.totalPayloads} tone="text-yellow-300" />
+            <SummaryCard label="Total vuln" value={scanSummary.total} tone="text-white" />
+            <SummaryCard label="Payloads" value={sqlSummary.totalPayloads} tone="text-yellow-300" />
             <SummaryCard label="High risk" value={scanSummary.high} tone="text-red-300" />
             <SummaryCard label="Medium risk" value={scanSummary.medium} tone="text-orange-300" />
             <SummaryCard label="Low risk" value={scanSummary.low} tone="text-emerald-300" />
             <SummaryCard label="Info" value={scanSummary.info} tone="text-sky-300" />
           </div>
 
-          <article className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3">
-            <p className="text-sm text-zinc-200">
-              SQLi: {sqlSummary.totalVulnerabilities} vulnérabilité(s) trouvée(s) ({sqlSummary.totalPayloads} payload(s)
-              exploitable(s))
-            </p>
-          </article>
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-8">
+            <h3 className="text-lg font-semibold text-white">Vulnerabilities</h3>
+            
+            {/* NOUVEAU : Boutons de filtrage */}
+            <div className="flex rounded-lg border border-zinc-800 bg-zinc-950/80 p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("severity")}
+                className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
+                  viewMode === "severity" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                By Severity
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("module")}
+                className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
+                  viewMode === "module" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                By Module
+              </button>
+            </div>
+          </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Vulnerabilities by type</h3>
             {!groupedVulnerabilities.length ? (
               <article className="glass-panel soft-ring rounded-2xl p-6">
                 <p className="text-zinc-300">No vulnerabilities found for this scan.</p>
               </article>
             ) : (
-              groupedVulnerabilities.map(([module, moduleVulnerabilities]) => {
-                const sqlPayloadCount =
-                  module === "sql_injection"
-                    ? moduleVulnerabilities.reduce((sum, vulnerability) => {
-                        const payloads = normalizePayloads(vulnerability.details || {});
-                        const count = Math.max(toNumber(vulnerability?.details?.countPayloads, payloads.length), payloads.length);
-                        return sum + count;
-                      }, 0)
-                    : 0;
-
-                return (
-                  <article key={module} className="glass-panel soft-ring rounded-2xl p-4">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-base font-semibold text-white">{MODULE_LABELS[module] || module}</h4>
-                      <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
-                        {module === "sql_injection"
-                          ? `${moduleVulnerabilities.length} vuln / ${sqlPayloadCount} payload(s)`
-                          : `${moduleVulnerabilities.length} item(s)`}
-                      </span>
-                    </div>
-                    <div className="grid gap-3">
-                      {moduleVulnerabilities.map((vulnerability) => (
-                        <GroupedVulnerabilityCard
-                          key={vulnerability.id}
-                          vulnerability={vulnerability}
-                          onOpen={setSelectedVulnerability}
-                        />
-                      ))}
-                    </div>
-                  </article>
-                );
-              })
+              groupedVulnerabilities.map(([groupName, groupVulns]) => (
+                <article key={groupName} className="glass-panel soft-ring rounded-2xl p-4">
+                  <div className="mb-4 flex items-center justify-between border-b border-zinc-800/50 pb-3">
+                    <h4 className="text-base font-semibold text-white">{groupName}</h4>
+                    <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
+                      {groupVulns.length} finding(s)
+                    </span>
+                  </div>
+                  <div className="grid gap-3">
+                    {groupVulns.map((vulnerability) => (
+                      <GroupedVulnerabilityCard
+                        key={vulnerability.id}
+                        vulnerability={vulnerability}
+                        onOpen={setSelectedVulnerability}
+                      />
+                    ))}
+                  </div>
+                </article>
+              ))
             )}
           </div>
         </article>

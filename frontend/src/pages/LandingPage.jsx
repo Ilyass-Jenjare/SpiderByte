@@ -5,49 +5,50 @@ import { useScan } from "../context/ScanContext";
 import { useToast } from "../context/ToastContext";
 import { RadarIcon, ReportIcon, ServerIcon, ShieldIcon, TerminalIcon } from "../components/icons";
 
+// LISTE MISE À JOUR AVEC TES VRAIS MODULES
 const featureList = [
   {
     icon: ShieldIcon,
-    title: "Threat-first detection",
-    description: "Detect SQLi, XSS, insecure headers and auth weaknesses with confidence scoring.",
+    title: "SQL Injection Detection",
+    description: "Custom payloads to identify boolean-based and error-based SQL vulnerabilities on target endpoints.",
   },
   {
     icon: RadarIcon,
-    title: "Continuous reconnaissance",
-    description: "Map exposed pages, forms and API routes before exploitation checks begin.",
+    title: "Nuclei Integration",
+    description: "Template-based scanning to discover known CVEs, misconfigurations, and exposed admin panels.",
   },
   {
     icon: ServerIcon,
-    title: "Live risk monitoring",
-    description: "Track your attack surface with trends and severity breakdowns in one view.",
+    title: "Port Reconnaissance (Nmap)",
+    description: "Scans for open ports and identifies underlying services to map the external attack surface.",
   },
   {
     icon: ReportIcon,
-    title: "Executive reporting",
-    description: "Share clean summaries with leadership and detailed evidence with engineering.",
+    title: "Security Posture Check",
+    description: "Analyzes SSL/TLS certificate validity and verifies the presence of strict HTTP security headers.",
   },
   {
     icon: TerminalIcon,
-    title: "Developer workflows",
-    description: "Use CLI mode and automation-ready outputs for CI/CD security pipelines.",
+    title: "Asynchronous Execution",
+    description: "Powered by Redis and Celery to process heavy background scans without freezing the interface.",
   },
 ];
 
 const reportPreviewCards = [
   {
-    title: "Executive Overview",
-    subtitle: "C-Level",
-    detail: "Top risks, trendline and remediation velocity for leadership updates.",
+    title: "Vulnerability Details",
+    subtitle: "Evidence",
+    detail: "View the exact payloads used to trigger the vulnerability and the server's response.",
   },
   {
-    title: "Technical Findings",
-    subtitle: "Security Team",
-    detail: "Proof-of-concept payloads, request traces and actionable recommendations.",
+    title: "Remediation Guidance",
+    subtitle: "Fix",
+    detail: "Actionable steps to patch SQL injections and properly configure security headers.",
   },
   {
-    title: "Compliance Snapshot",
-    subtitle: "Audit",
-    detail: "Control mapping and exportable evidence for SOC2 and ISO 27001.",
+    title: "Severity Breakdown",
+    subtitle: "Triage",
+    detail: "Findings are categorized from INFO to HIGH to prioritize the patching process.",
   },
 ];
 
@@ -123,9 +124,9 @@ export default function LandingPage() {
 
       <section id="features" className="space-y-8">
         <SectionTitle
-          eyebrow="Core Capabilities"
-          title="Built for modern cybersecurity teams"
-          description="Cover discovery, analysis and remediation with one clean security workflow."
+          eyebrow="Under the hood"
+          title="Modular Scanning Architecture"
+          description="SpiderByte combines the best open-source tools with custom Python scripts."
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -137,37 +138,38 @@ export default function LandingPage() {
 
       <section id="reports" className="space-y-8">
         <SectionTitle
-          eyebrow="Reports Preview"
-          title="Clear visibility for technical and business stakeholders"
-          description="SpiderByte combines developer detail and executive clarity in every report."
+          eyebrow="Dashboard Preview"
+          title="Clear visibility on vulnerabilities"
+          description="A centralized view to analyze findings and extract proof-of-concept payloads."
         />
 
         <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
           <article className="glass-panel soft-ring rounded-3xl p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold text-white">Attack Surface Summary</h3>
+              <h3 className="text-lg font-semibold text-white">Example Scan Result</h3>
               <span className="rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3 py-1 text-xs text-yellow-300">
-                Updated 1 min ago
+                demo.testfire.net
               </span>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <ReportStat label="High" value="06" toneClass="text-red-300" />
-              <ReportStat label="Medium" value="14" toneClass="text-orange-300" />
-              <ReportStat label="Low" value="31" toneClass="text-emerald-300" />
+              <ReportStat label="High Risk" value="02" toneClass="text-red-300" />
+              <ReportStat label="Medium Risk" value="05" toneClass="text-orange-300" />
+              <ReportStat label="Low / Info" value="12" toneClass="text-emerald-300" />
             </div>
 
             <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
               <div className="mb-4 flex items-center justify-between text-sm text-zinc-400">
-                <span>Weekly Risk Trend</span>
-                <span>-28% unresolved high severity</span>
+                <span>Scan Progress Simulation</span>
+                <span>100% Complete</span>
               </div>
               <div className="grid grid-cols-7 items-end gap-2">
-                {[42, 39, 36, 30, 24, 19, 14].map((value, index) => (
+                {/* Graphique simulé plus réaliste */}
+                {[10, 15, 25, 40, 60, 80, 100].map((value, index) => (
                   <div
                     key={`trend-${value}-${index}`}
                     className="rounded-md bg-gradient-to-t from-yellow-500 to-yellow-300 transition-all duration-300 hover:from-yellow-400 hover:to-yellow-200"
-                    style={{ height: `${value * 2}px` }}
+                    style={{ height: `${value}px` }}
                   />
                 ))}
               </div>

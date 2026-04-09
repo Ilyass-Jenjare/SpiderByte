@@ -14,23 +14,24 @@ export default function HeroSection({ onStartScan, isLaunching }) {
     <section className="grid items-start gap-8 lg:grid-cols-[1.08fr_0.92fr]">
       <div className="space-y-7">
         <span className="inline-flex items-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-1 text-xs uppercase tracking-[0.24em] text-yellow-300">
-          Security Automation
+          Academic Cybersecurity Project
         </span>
 
         <div className="space-y-4">
           <h1 className="text-balance text-4xl font-semibold leading-tight text-white md:text-6xl">
-            Website Vulnerability Scanner
+            Advanced Web Vulnerability Scanner
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-zinc-300 md:text-lg">
-            Detect SQL injection, XSS, weak headers and risky endpoints in minutes. SpiderByte gives your team clear
-            risk visibility and practical remediation guidance.
+            Detect SQL injections, exposed ports, weak HTTP headers, and SSL misconfigurations. 
+            SpiderByte utilizes asynchronous workers to deliver deep reconnaissance without slowing you down.
           </p>
         </div>
 
+        {/* VRAIES INFORMATIONS TECHNIQUES AU LIEU DES FAUSSES STATS */}
         <div className="grid gap-4 text-sm text-zinc-300 sm:grid-cols-3">
-          <MetricPill label="Scans / Day" value="1,280+" />
-          <MetricPill label="Avg. Setup" value="< 2 min" />
-          <MetricPill label="Coverage Gain" value="+43%" />
+          <MetricPill label="Scan Engines" value="Nuclei & Nmap" />
+          <MetricPill label="Custom Scripts" value="SQL Injection" />
+          <MetricPill label="Architecture" value="Celery Workers" />
         </div>
       </div>
 
