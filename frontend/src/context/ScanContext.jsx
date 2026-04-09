@@ -298,6 +298,40 @@ function normalizeSqlSeverity(vulnerability) {
   return "info";
 }
 
+function sqlConfidenceRank(value) {
+  const confidence = String(value || "").toUpperCase();
+  if (confidence === "HIGH") {
+    return 3;
+  }
+  if (confidence === "MEDIUM") {
+    return 2;
+  }
+  if (confidence === "LOW") {
+    return 1;
+  }
+  return 0;
+}
+
+function normalizePayloadList(payloads, fallbackPayload = "") {
+  const combined = Array.isArray(payloads) ? [...payloads] : [];
+  if (fallbackPayload) {
+    combined.unshift(fallbackPayload);
+  }
+
+  const seen = new Set();
+  const uniquePayloads = [];
+  combined.forEach((payload) => {
+    const normalized = String(payload || "").trim();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+    seen.add(normalized);
+    uniquePayloads.push(normalized);
+  });
+
+  return uniquePayloads;
+}
+
 function normalizeNmapSeverity(port) {
   const numericPort = toNumber(port, 0);
   if ([23, 3389, 3306, 5432].includes(numericPort)) {
@@ -323,13 +357,31 @@ function findingsFromBackendResult(scan, target) {
 
   const sqlResult = backendResults.sql_injection;
   if (Array.isArray(sqlResult?.vulnerabilities)) {
-    sqlResult.vulnerabilities.forEach((vulnerability, index) => {
-      const endpoint = vulnerability?.lien || target;
+    const sortedSqlVulnerabilities = [...sqlResult.vulnerabilities].sort((a, b) => {
+      const confidenceDelta = sqlConfidenceRank(b?.confidence) - sqlConfidenceRank(a?.confidence);
+      if (confidenceDelta !== 0) {
+        return confidenceDelta;
+      }
+
+      const payloadDelta = toNumber(b?.count_payloads, 0) - toNumber(a?.count_payloads, 0);
+      if (payloadDelta !== 0) {
+        return payloadDelta;
+      }
+
+      const endpointA = String(a?.endpoint || a?.lien || "");
+      const endpointB = String(b?.endpoint || b?.lien || "");
+      return endpointA.localeCompare(endpointB);
+    });
+
+    sortedSqlVulnerabilities.forEach((vulnerability, index) => {
+      const endpoint = vulnerability?.endpoint || vulnerability?.lien || target;
       const foundOnPage = vulnerability?.found_on || endpoint;
       const detectionMethod = vulnerability?.method || vulnerability?.detection_technique || "Differential analysis";
       const confidenceLevel = vulnerability?.confidence || "Unknown";
       const indicator = vulnerability?.indicator || "";
-      const payload = vulnerability?.payload || "";
+      const payloads = normalizePayloadList(vulnerability?.payloads, vulnerability?.payload);
+      const payload = payloads[0] || "";
+      const countPayloads = Math.max(toNumber(vulnerability?.count_payloads, payloads.length), payloads.length);
       const vulnerabilityType = vulnerability?.type || "SQLI";
       const severity = normalizeSqlSeverity(vulnerability);
 
@@ -337,22 +389,24 @@ function findingsFromBackendResult(scan, target) {
         id: stableFindingId(scanId, "sql", index),
         module: "sql_injection",
         moduleLabel: "SQL Injection",
-        name: `SQL injection finding #${index + 1}`,
+        name: `${vulnerabilityType.replaceAll("_", " ")} · ${endpoint}`,
         vulnerabilityType,
         severity,
         description: indicator
-          ? `Potential SQL injection discovered (${detectionMethod}) with indicator: ${indicator}.`
-          : `Potential SQL injection discovered using ${detectionMethod}.`,
+          ? `Potential SQL injection discovered (${detectionMethod}) with indicator: ${indicator}. ${countPayloads} exploitable payload(s).`
+          : `Potential SQL injection discovered using ${detectionMethod}. ${countPayloads} exploitable payload(s).`,
         targetUrl: endpoint,
         details: {
           endpoint,
           foundOnPage,
           payload,
+          payloads,
+          countPayloads,
           detectionMethod,
           type: vulnerabilityType,
           confidenceLevel,
           httpStatus: String(vulnerability?.status || ""),
-          responseLength: String(vulnerability?.response_length || ""),
+          responseLength: String(vulnerability?.response_length_max || vulnerability?.response_length || ""),
           indicator,
         },
       });
@@ -503,6 +557,28 @@ function findingsFromBackendResult(scan, target) {
   return findings;
 }
 
+function deriveSqlMetrics(resultModules, findings) {
+  const sqlResult = resultModules?.sql_injection;
+  if (sqlResult && typeof sqlResult === "object") {
+    const totalVulnerabilities = toNumber(sqlResult.total_vulnerabilities, toNumber(sqlResult.vulnerabilities_found, 0));
+    const totalPayloads = toNumber(sqlResult.total_payloads, 0);
+    if (totalVulnerabilities > 0 || totalPayloads > 0) {
+      return { totalVulnerabilities, totalPayloads };
+    }
+  }
+
+  const sqlFindings = findings.filter((finding) => finding.module === "sql_injection");
+  const totalPayloads = sqlFindings.reduce((sum, finding) => {
+    const payloadCount = toNumber(finding?.details?.countPayloads, finding?.details?.payload ? 1 : 0);
+    return sum + Math.max(payloadCount, 0);
+  }, 0);
+
+  return {
+    totalVulnerabilities: sqlFindings.length,
+    totalPayloads,
+  };
+}
+
 function normalizeLegacyVulnerability(vulnerability, scanTarget) {
   return {
     id: vulnerability.id || createId("legacy"),
@@ -547,6 +623,7 @@ function normalizeScan(scan) {
     modulesCount: toNumber(resultPayload?.modules_count, Object.keys(resultModules).length),
     findings: findingsFromScan,
     summary: normalizeSummary(scan.summary, findingsFromScan),
+    sqlMetrics: deriveSqlMetrics(resultModules, findingsFromScan),
   };
 }
 

@@ -57,6 +57,30 @@ function formatStatus(status) {
   return normalized ? normalized.toUpperCase() : "UNKNOWN";
 }
 
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizePayloads(details) {
+  const payloads = Array.isArray(details?.payloads) ? [...details.payloads] : [];
+  if (details?.payload) {
+    payloads.unshift(details.payload);
+  }
+
+  const seen = new Set();
+  const unique = [];
+  payloads.forEach((payload) => {
+    const normalized = String(payload || "").trim();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+    seen.add(normalized);
+    unique.push(normalized);
+  });
+  return unique;
+}
+
 function SummaryCard({ label, value, tone }) {
   return (
     <article className="glass-panel soft-ring rounded-2xl p-4">
@@ -168,21 +192,53 @@ function ScanMetaField({ label, value, mono = false }) {
 function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
   const severity = normalizeSeverity(vulnerability.severity);
   const badgeTone = severityBadgeTone(severity);
+  const payloads = normalizePayloads(vulnerability.details || {});
+  const payloadCount = Math.max(
+    toNumber(vulnerability?.details?.countPayloads, payloads.length),
+    payloads.length,
+  );
+  const isSqlFinding = vulnerability.module === "sql_injection";
 
   return (
-    <button
-      type="button"
-      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 text-left transition duration-300 hover:border-zinc-600 hover:bg-zinc-900"
-      onClick={() => onOpen(vulnerability)}
-    >
+    <article className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 text-left transition duration-300 hover:border-zinc-600 hover:bg-zinc-900">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h4 className="text-sm font-semibold text-white">{vulnerability.name || "Vulnerability"}</h4>
-        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeTone}`}>{severity}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeTone}`}>{severity}</span>
+          <button
+            type="button"
+            onClick={() => onOpen(vulnerability)}
+            className="rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-200 transition duration-300 hover:border-zinc-500 hover:bg-zinc-800"
+          >
+            View details
+          </button>
+        </div>
       </div>
       <p className="mt-2 text-xs uppercase tracking-wide text-zinc-500">{vulnerability.vulnerabilityType || "General"}</p>
       <p className="mt-2 text-sm text-zinc-300">{vulnerability.description || "No description."}</p>
+      {isSqlFinding ? (
+        <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/70 p-3">
+          <p className="text-xs text-zinc-300">
+            {payloadCount} payload(s) exploitable(s)
+          </p>
+          {payloads.length ? (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs text-zinc-400 transition hover:text-zinc-200">
+                Show payload list ({payloads.length} unique)
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {payloads.map((payload, index) => (
+                  <li key={`${vulnerability.id}-payload-${index}`} className="rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 font-mono text-xs text-zinc-300">
+                    {payload}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
       <p className="mt-3 truncate font-mono text-xs text-zinc-400">{vulnerability.targetUrl || "-"}</p>
-    </button>
+    </article>
   );
 }
 
@@ -204,6 +260,22 @@ export default function Dashboard() {
   }, [activeScan]);
 
   const scanSummary = useMemo(() => normalizeSummary(activeScan?.summary, vulnerabilities), [activeScan?.summary, vulnerabilities]);
+  const sqlSummary = useMemo(() => {
+    const sqlFindings = vulnerabilities.filter((vulnerability) => vulnerability.module === "sql_injection");
+    const derivedPayloads = sqlFindings.reduce((sum, vulnerability) => {
+      const payloads = normalizePayloads(vulnerability.details || {});
+      const count = Math.max(toNumber(vulnerability?.details?.countPayloads, payloads.length), payloads.length);
+      return sum + count;
+    }, 0);
+
+    return {
+      totalVulnerabilities: Math.max(
+        toNumber(activeScan?.sqlMetrics?.totalVulnerabilities, sqlFindings.length),
+        sqlFindings.length,
+      ),
+      totalPayloads: Math.max(toNumber(activeScan?.sqlMetrics?.totalPayloads, derivedPayloads), derivedPayloads),
+    };
+  }, [activeScan?.sqlMetrics, vulnerabilities]);
 
   const groupedVulnerabilities = useMemo(() => {
     const groups = new Map();
@@ -288,13 +360,21 @@ export default function Dashboard() {
             <ScanMetaField label="Modules" value={activeScan.modulesCount || 0} />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <SummaryCard label="Total vulnerabilities" value={scanSummary.total} tone="text-white" />
+            <SummaryCard label="Exploitable payloads" value={sqlSummary.totalPayloads} tone="text-yellow-300" />
             <SummaryCard label="High risk" value={scanSummary.high} tone="text-red-300" />
             <SummaryCard label="Medium risk" value={scanSummary.medium} tone="text-orange-300" />
             <SummaryCard label="Low risk" value={scanSummary.low} tone="text-emerald-300" />
             <SummaryCard label="Info" value={scanSummary.info} tone="text-sky-300" />
           </div>
+
+          <article className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3">
+            <p className="text-sm text-zinc-200">
+              SQLi: {sqlSummary.totalVulnerabilities} vulnérabilité(s) trouvée(s) ({sqlSummary.totalPayloads} payload(s)
+              exploitable(s))
+            </p>
+          </article>
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Vulnerabilities by type</h3>
@@ -303,25 +383,38 @@ export default function Dashboard() {
                 <p className="text-zinc-300">No vulnerabilities found for this scan.</p>
               </article>
             ) : (
-              groupedVulnerabilities.map(([module, moduleVulnerabilities]) => (
-                <article key={module} className="glass-panel soft-ring rounded-2xl p-4">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h4 className="text-base font-semibold text-white">{MODULE_LABELS[module] || module}</h4>
-                    <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
-                      {moduleVulnerabilities.length} item(s)
-                    </span>
-                  </div>
-                  <div className="grid gap-3">
-                    {moduleVulnerabilities.map((vulnerability) => (
-                      <GroupedVulnerabilityCard
-                        key={vulnerability.id}
-                        vulnerability={vulnerability}
-                        onOpen={setSelectedVulnerability}
-                      />
-                    ))}
-                  </div>
-                </article>
-              ))
+              groupedVulnerabilities.map(([module, moduleVulnerabilities]) => {
+                const sqlPayloadCount =
+                  module === "sql_injection"
+                    ? moduleVulnerabilities.reduce((sum, vulnerability) => {
+                        const payloads = normalizePayloads(vulnerability.details || {});
+                        const count = Math.max(toNumber(vulnerability?.details?.countPayloads, payloads.length), payloads.length);
+                        return sum + count;
+                      }, 0)
+                    : 0;
+
+                return (
+                  <article key={module} className="glass-panel soft-ring rounded-2xl p-4">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="text-base font-semibold text-white">{MODULE_LABELS[module] || module}</h4>
+                      <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
+                        {module === "sql_injection"
+                          ? `${moduleVulnerabilities.length} vuln / ${sqlPayloadCount} payload(s)`
+                          : `${moduleVulnerabilities.length} item(s)`}
+                      </span>
+                    </div>
+                    <div className="grid gap-3">
+                      {moduleVulnerabilities.map((vulnerability) => (
+                        <GroupedVulnerabilityCard
+                          key={vulnerability.id}
+                          vulnerability={vulnerability}
+                          onOpen={setSelectedVulnerability}
+                        />
+                      ))}
+                    </div>
+                  </article>
+                );
+              })
             )}
           </div>
         </article>

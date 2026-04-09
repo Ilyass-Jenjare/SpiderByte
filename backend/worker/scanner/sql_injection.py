@@ -14,6 +14,7 @@ import re
 # Configuration
 MAX_PAGES = 40
 DELAY = 0.05
+CONFIDENCE_PRIORITY = {"HIGH": 3, "MEDIUM": 2, "LOW": 1, "UNKNOWN": 0}
 
 # ============================================================================
 # FONCTIONS UTILITAIRES
@@ -33,6 +34,109 @@ def normalize_text(text):
     text = re.sub(r'\s+', ' ', text)
     text = text.strip()
     return text
+
+
+def confidence_rank(value):
+    """Retourne un score numérique de confiance pour faciliter les tris/comparaisons."""
+    normalized = str(value or "UNKNOWN").upper()
+    return CONFIDENCE_PRIORITY.get(normalized, 0)
+
+
+def merge_confidence(current, candidate):
+    """Conserve le niveau de confiance le plus élevé entre deux valeurs."""
+    current_normalized = str(current or "UNKNOWN").upper()
+    candidate_normalized = str(candidate or "UNKNOWN").upper()
+    return current_normalized if confidence_rank(current_normalized) >= confidence_rank(candidate_normalized) else candidate_normalized
+
+
+def dedupe_payloads(payloads):
+    """Supprime les doublons de payloads en conservant l'ordre d'apparition."""
+    unique_payloads = []
+    seen = set()
+
+    for payload in payloads:
+        normalized = str(payload or "").strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        unique_payloads.append(normalized)
+
+    return unique_payloads
+
+
+def group_vulnerabilities_by_endpoint_and_type(vulnerabilities):
+    """
+    Regroupe les vulnérabilités SQL par vulnérabilité réelle:
+    une vulnérabilité = (endpoint + type).
+    """
+    grouped = {}
+
+    for vuln in vulnerabilities:
+        endpoint = str(vuln.get("lien") or vuln.get("endpoint") or "").strip()
+        vuln_type = str(vuln.get("type") or "SQLI").upper()
+        key = (endpoint, vuln_type)
+
+        if key not in grouped:
+            grouped[key] = {
+                "endpoint": endpoint,
+                "lien": endpoint,  # rétrocompatibilité avec le format historique
+                "type": vuln_type,
+                "found_on": str(vuln.get("found_on") or endpoint),
+                "confidence": str(vuln.get("confidence") or "UNKNOWN").upper(),
+                "payloads": [],
+                "count_payloads": 0,
+                "method": str(vuln.get("method") or ""),
+                "detection_technique": str(vuln.get("detection_technique") or ""),
+                "status": vuln.get("status"),
+                "indicator": str(vuln.get("indicator") or ""),
+                "response_length": int(vuln.get("response_length") or 0),
+                "response_length_max": int(vuln.get("response_length") or 0),
+            }
+
+        group = grouped[key]
+        group["count_payloads"] += 1
+
+        payload = str(vuln.get("payload") or "").strip()
+        if payload:
+            group["payloads"].append(payload)
+
+        # Conserver la meilleure confiance observée dans le groupe.
+        group["confidence"] = merge_confidence(group.get("confidence"), vuln.get("confidence"))
+
+        # Enrichissement sans écraser les données existantes.
+        if not group.get("found_on") and vuln.get("found_on"):
+            group["found_on"] = str(vuln.get("found_on"))
+        if not group.get("method") and vuln.get("method"):
+            group["method"] = str(vuln.get("method"))
+        if not group.get("detection_technique") and vuln.get("detection_technique"):
+            group["detection_technique"] = str(vuln.get("detection_technique"))
+        if not group.get("indicator") and vuln.get("indicator"):
+            group["indicator"] = str(vuln.get("indicator"))
+        if group.get("status") is None and vuln.get("status") is not None:
+            group["status"] = vuln.get("status")
+
+        response_length = int(vuln.get("response_length") or 0)
+        if response_length > group.get("response_length_max", 0):
+            group["response_length_max"] = response_length
+            group["response_length"] = response_length
+
+    normalized_groups = []
+    for group in grouped.values():
+        group["payloads"] = dedupe_payloads(group.get("payloads", []))
+        # Champ historique conservé: premier payload de la liste.
+        group["payload"] = group["payloads"][0] if group["payloads"] else ""
+        normalized_groups.append(group)
+
+    normalized_groups.sort(
+        key=lambda item: (
+            -confidence_rank(item.get("confidence")),
+            -int(item.get("count_payloads", 0)),
+            item.get("endpoint", ""),
+            item.get("type", ""),
+        )
+    )
+
+    return normalized_groups
 
 
 # ============================================================================
@@ -426,17 +530,25 @@ def scan(url: str) -> dict:
         vulns = fuzzer(forms, payloads, use_differential=True)
         
         # PHASE 3 : Analyse des résultats
-        vulnerable_forms = len(set([v['lien'] for v in vulns]))
+        grouped_vulns = group_vulnerabilities_by_endpoint_and_type(vulns)
+        vulnerable_forms = len(set([v.get('endpoint') for v in grouped_vulns if v.get('endpoint')]))
         vulnerability_rate = (vulnerable_forms / len(forms) * 100) if forms else 0
-        
-        # Breakdown par confiance
-        high_conf = [v for v in vulns if v.get('confidence') == 'HIGH']
-        medium_conf = [v for v in vulns if v.get('confidence') == 'MEDIUM']
-        low_conf = [v for v in vulns if v.get('confidence') == 'LOW']
-        
+
+        total_vulnerabilities = len(grouped_vulns)
+        total_payloads = len(vulns)
+
+        # Breakdown par confiance (au niveau des vulnérabilités réelles regroupées)
+        high_conf = [v for v in grouped_vulns if str(v.get('confidence')).upper() == 'HIGH']
+        medium_conf = [v for v in grouped_vulns if str(v.get('confidence')).upper() == 'MEDIUM']
+        low_conf = [v for v in grouped_vulns if str(v.get('confidence')).upper() == 'LOW']
+
         # Générer un résumé
-        if vulns:
-            summary = f"{len(vulns)} vulnérabilité(s) trouvée(s) sur {len(forms)} formulaire(s) ({vulnerability_rate:.1f}%)"
+        if grouped_vulns:
+            summary = (
+                f"{total_vulnerabilities} vulnérabilité(s) trouvée(s) "
+                f"({total_payloads} payload(s) exploitable(s)) sur {len(forms)} formulaire(s) "
+                f"({vulnerability_rate:.1f}%)"
+            )
             if high_conf:
                 summary += f" - {len(high_conf)} HIGH"
             if medium_conf:
@@ -445,21 +557,23 @@ def scan(url: str) -> dict:
                 summary += f", {len(low_conf)} LOW"
         else:
             summary = f"Aucune vulnérabilité détectée sur {len(forms)} formulaire(s)"
-        
+
         # Retour formaté
         return {
             "status": "success",
             "target": url,
             "pages_crawled": len(pages),
             "forms_tested": len(forms),
-            "vulnerabilities_found": len(vulns),
+            "vulnerabilities_found": total_vulnerabilities,  # rétrocompatibilité
+            "total_vulnerabilities": total_vulnerabilities,
+            "total_payloads": total_payloads,
             "vulnerability_rate": f"{vulnerability_rate:.1f}%",
             "confidence_breakdown": {
                 "HIGH": len(high_conf),
                 "MEDIUM": len(medium_conf),
                 "LOW": len(low_conf)
             },
-            "vulnerabilities": vulns,
+            "vulnerabilities": grouped_vulns,
             "summary": summary
         }
         
