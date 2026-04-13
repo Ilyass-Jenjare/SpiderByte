@@ -1,6 +1,5 @@
 # RAPPORT DE PROJET
 
-## PAGE DE TITRE
 
 ---
 
