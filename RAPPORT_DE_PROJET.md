@@ -1,7 +1,5 @@
 # PROJECT REPORT
 
----
-
 # **SpiderByte**
 ## Dynamic Web Security Scanning Platform (DAST)
 
