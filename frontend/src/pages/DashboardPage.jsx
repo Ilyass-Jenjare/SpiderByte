@@ -14,7 +14,6 @@ const MODULE_LABELS = {
   legacy: "Legacy",
 };
 
-// Poids des sévérités pour forcer le tri (High en haut, Info en bas)
 const SEVERITY_RANK = { high: 4, medium: 3, low: 2, info: 1 };
 
 function normalizeSeverity(value) {
@@ -225,12 +224,65 @@ function GroupedVulnerabilityCard({ vulnerability, onOpen }) {
   );
 }
 
+// BARRE DE PROGRESSION CONNECTÉE À CELERY
+function ScanProgressBar({ scan }) {
+  const meta = scan.progressMeta;
+  
+  const modulesFinis = meta && meta.modules_finis ? Object.keys(meta.modules_finis).length : 0;
+  const totalAFaire = meta?.total_a_faire || scan.modulesCount || 3; 
+  const progress = Math.min(Math.floor((modulesFinis / totalAFaire) * 100), 99);
+
+  return (
+    <div className="glass-panel soft-ring mt-8 flex w-full flex-col items-center justify-center rounded-2xl px-6 py-16 text-center">
+      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400/10 border border-yellow-400/30">
+        <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8 animate-spin text-yellow-400">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </div>
+      
+      <h3 className="text-2xl font-semibold text-white">
+        {meta?.status || "Initializing scan..."}
+      </h3>
+      <p className="mt-2 text-sm text-zinc-400">
+        Analyzing <span className="font-mono text-zinc-300">{scan.target}</span>. 
+        Time elapsed: {meta?.temps_total_ecoule || "0.0s"}
+      </p>
+
+      <div className="mt-8 w-full max-w-md">
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold text-zinc-400">
+          <span className="uppercase tracking-widest">
+            Modules Completed: {modulesFinis} / {totalAFaire}
+          </span>
+          <span className="text-yellow-400">{progress}%</span>
+        </div>
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div 
+            className="h-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+      
+      {meta && meta.modules_finis && Object.keys(meta.modules_finis).length > 0 && (
+         <div className="mt-4 flex gap-2 justify-center flex-wrap max-w-lg">
+           {Object.keys(meta.modules_finis).map(modName => (
+             <span key={modName} className="text-xs bg-zinc-800/80 border border-zinc-700 text-zinc-300 px-2 py-1 rounded-md">
+               ✓ {modName} ({meta.modules_finis[modName]})
+             </span>
+           ))}
+         </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { scans, activeScan, activeScanId, selectScan } = useScan();
   const [selectedVulnerability, setSelectedVulnerability] = useState(null);
-  
-  // NOUVEAU : État pour gérer le mode de vue (Par Sévérité ou Par Module)
   const [viewMode, setViewMode] = useState("severity"); 
+
+  const isScanFinished = activeScan?.status?.toUpperCase() === "FINISHED" || activeScan?.status?.toUpperCase() === "SUCCESS";
 
   const rawVulnerabilities = useMemo(() => {
     if (!activeScan) return [];
@@ -255,11 +307,9 @@ export default function Dashboard() {
     };
   }, [activeScan?.sqlMetrics, rawVulnerabilities]);
 
-  // NOUVEAU : Dédoublonnage intelligent des alertes
   const aggregatedVulnerabilities = useMemo(() => {
     const map = new Map();
     rawVulnerabilities.forEach((v) => {
-      // On regroupe par module et par nom de base (on enlève l'URL du nom pour les grouper)
       const baseName = (v.name || "").split(' · ')[0];
       const key = `${v.module}-${baseName}`;
 
@@ -274,11 +324,10 @@ export default function Dashboard() {
 
     return Array.from(map.values()).map(v => ({
       ...v,
-      endpointsList: Array.from(v.endpoints) // Utilisé dans les détails
+      endpointsList: Array.from(v.endpoints)
     }));
   }, [rawVulnerabilities]);
 
-  // NOUVEAU : Groupement en fonction du viewMode choisi
   const groupedVulnerabilities = useMemo(() => {
     const groups = new Map();
     
@@ -288,7 +337,6 @@ export default function Dashboard() {
       groups.get(groupKey).push(v);
     });
 
-    // Tri à l'intérieur de chaque groupe par Sévérité
     groups.forEach((vulns) => {
       vulns.sort((a, b) => SEVERITY_RANK[normalizeSeverity(b.severity)] - SEVERITY_RANK[normalizeSeverity(a.severity)]);
     });
@@ -346,7 +394,13 @@ export default function Dashboard() {
         <article className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold text-white">2. Scan details</h2>
-            <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-200">
+            <span className={`rounded-full border px-3 py-1 text-xs font-bold tracking-wide ${
+              isScanFinished 
+                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300" 
+                : activeScan.status === "FAILED" || activeScan.status === "FAILURE"
+                  ? "border-red-500/50 bg-red-500/10 text-red-300"
+                  : "border-yellow-500/50 bg-yellow-500/10 text-yellow-300 animate-pulse"
+            }`}>
               {formatStatus(activeScan.status)}
             </span>
           </div>
@@ -354,72 +408,76 @@ export default function Dashboard() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <ScanMetaField label="Target" value={activeScan.target} mono />
             <ScanMetaField label="Created At" value={formatDateTime(activeScan.createdAt)} />
-            <ScanMetaField label="Duration" value={activeScan.executionTime || "-"} />
-            <ScanMetaField label="Modules" value={activeScan.modulesCount || 0} />
+            <ScanMetaField label="Duration" value={activeScan.executionTime || (isScanFinished ? "-" : "Calculating...")} />
+            <ScanMetaField label="Modules" value={activeScan.modulesCount || (isScanFinished ? 0 : "-")} />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <SummaryCard label="Total vuln" value={scanSummary.total} tone="text-white" />
-            <SummaryCard label="Payloads" value={sqlSummary.totalPayloads} tone="text-yellow-300" />
-            <SummaryCard label="High risk" value={scanSummary.high} tone="text-red-300" />
-            <SummaryCard label="Medium risk" value={scanSummary.medium} tone="text-orange-300" />
-            <SummaryCard label="Low risk" value={scanSummary.low} tone="text-emerald-300" />
-            <SummaryCard label="Info" value={scanSummary.info} tone="text-sky-300" />
-          </div>
+          {!isScanFinished ? (
+            <ScanProgressBar scan={activeScan} />
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+                <SummaryCard label="Total vuln" value={scanSummary.total} tone="text-white" />
+                <SummaryCard label="Payloads" value={sqlSummary.totalPayloads} tone="text-yellow-300" />
+                <SummaryCard label="High risk" value={scanSummary.high} tone="text-red-300" />
+                <SummaryCard label="Medium risk" value={scanSummary.medium} tone="text-orange-300" />
+                <SummaryCard label="Low risk" value={scanSummary.low} tone="text-emerald-300" />
+                <SummaryCard label="Info" value={scanSummary.info} tone="text-sky-300" />
+              </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-8">
-            <h3 className="text-lg font-semibold text-white">Vulnerabilities</h3>
-            
-            {/* NOUVEAU : Boutons de filtrage */}
-            <div className="flex rounded-lg border border-zinc-800 bg-zinc-950/80 p-1">
-              <button
-                type="button"
-                onClick={() => setViewMode("severity")}
-                className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
-                  viewMode === "severity" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                By Severity
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("module")}
-                className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
-                  viewMode === "module" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                By Module
-              </button>
-            </div>
-          </div>
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-8">
+                <h3 className="text-lg font-semibold text-white">Vulnerabilities</h3>
+                <div className="flex rounded-lg border border-zinc-800 bg-zinc-950/80 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("severity")}
+                    className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
+                      viewMode === "severity" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    By Severity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("module")}
+                    className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-all ${
+                      viewMode === "module" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    By Module
+                  </button>
+                </div>
+              </div>
 
-          <div className="space-y-4">
-            {!groupedVulnerabilities.length ? (
-              <article className="glass-panel soft-ring rounded-2xl p-6">
-                <p className="text-zinc-300">No vulnerabilities found for this scan.</p>
-              </article>
-            ) : (
-              groupedVulnerabilities.map(([groupName, groupVulns]) => (
-                <article key={groupName} className="glass-panel soft-ring rounded-2xl p-4">
-                  <div className="mb-4 flex items-center justify-between border-b border-zinc-800/50 pb-3">
-                    <h4 className="text-base font-semibold text-white">{groupName}</h4>
-                    <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
-                      {groupVulns.length} finding(s)
-                    </span>
-                  </div>
-                  <div className="grid gap-3">
-                    {groupVulns.map((vulnerability) => (
-                      <GroupedVulnerabilityCard
-                        key={vulnerability.id}
-                        vulnerability={vulnerability}
-                        onOpen={setSelectedVulnerability}
-                      />
-                    ))}
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
+              <div className="space-y-4">
+                {!groupedVulnerabilities.length ? (
+                  <article className="glass-panel soft-ring rounded-2xl p-6">
+                    <p className="text-zinc-300">No vulnerabilities found for this scan.</p>
+                  </article>
+                ) : (
+                  groupedVulnerabilities.map(([groupName, groupVulns]) => (
+                    <article key={groupName} className="glass-panel soft-ring rounded-2xl p-4">
+                      <div className="mb-4 flex items-center justify-between border-b border-zinc-800/50 pb-3">
+                        <h4 className="text-base font-semibold text-white">{groupName}</h4>
+                        <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
+                          {groupVulns.length} finding(s)
+                        </span>
+                      </div>
+                      <div className="grid gap-3">
+                        {groupVulns.map((vulnerability) => (
+                          <GroupedVulnerabilityCard
+                            key={vulnerability.id}
+                            vulnerability={vulnerability}
+                            onOpen={setSelectedVulnerability}
+                          />
+                        ))}
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </article>
       ) : null}
 
