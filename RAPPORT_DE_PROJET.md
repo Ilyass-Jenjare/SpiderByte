@@ -1,7 +1,5 @@
 # PROJECT REPORT
 
-## TITLE PAGE
-
 ---
 
 # **SpiderByte**
