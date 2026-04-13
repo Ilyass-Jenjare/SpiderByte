@@ -1,208 +1,210 @@
-# RAPPORT DE PROJET
+# PROJECT REPORT
 
+## TITLE PAGE
 
 ---
 
 # **SpiderByte**
-## Plateforme de Scanning Dynamique de Sécurité Web (DAST)
+## Dynamic Web Security Scanning Platform (DAST)
 
-**Auteur :** Ilyass Jenjare
-**Date :** Avril 2026  
-**Cursus :** Baccalauréat en informatique cheminement cybersécurité
-**Version du projet :** 1.0.0  
+**Author:** Ilyass Jenjare  
+**Date:** April 2026  
+**Institution:** University of Sherbrooke
+**Program:** Bachelor's Degree in Computer Science - Cybersecurity Stream  
+**Project Version:** 1.0.0  
 
 ---
 
-## TABLE DES MATIÈRES
+## TABLE OF CONTENTS
 
 1. [Introduction](#introduction)
-2. [Revue de littérature](#revue-de-littérature)
-3. [Chapitre 1 : Architecture et Infrastructure](#chapitre-1--architecture-et-infrastructure)
-4. [Chapitre 2 : Technologies et Justifications](#chapitre-2--technologies-et-justifications)
-5. [Chapitre 3 : Documentation Technique](#chapitre-3--documentation-technique)
-6. [Chapitre 4 : Documentation d'Utilisation](#chapitre-4--documentation-dutilisation)
-7. [Chapitre 5 : Tests et Résultats](#chapitre-5--tests-et-résultats)
+2. [Literature Review](#literature-review)
+3. [Chapter 1: Architecture and Infrastructure](#chapter-1--architecture-and-infrastructure)
+4. [Chapter 2: Technologies and Justifications](#chapter-2--technologies-and-justifications)
+5. [Chapter 3: Technical Documentation](#chapter-3--technical-documentation)
+6. [Chapter 4: Usage Documentation](#chapter-4--usage-documentation)
+7. [Chapter 5: Tests and Results](#chapter-5--tests-and-results)
 8. [Conclusion](#conclusion)
-9. [Annexes](#annexes)
-10. [Références](#références)
+9. [Appendices](#appendices)
+10. [References](#references)
 
 ---
 
 # INTRODUCTION
 
-## Présentation du thème et mise en contexte
+## Project Theme and Context
 
-SpiderByte est une plateforme de **scanning dynamique de sécurité web** (DAST — Dynamic Application Security Testing) orientée **Cloud-Native**. Elle permet de détecter et d'auditer les vulnérabilités de sécurité dans les applications web modernes via une interface full-stack intégrée.
+SpiderByte is a **dynamic web security scanning platform** (DAST — Dynamic Application Security Testing) oriented toward **Cloud-Native**. It enables detection and auditing of security vulnerabilities in modern web applications via an integrated full-stack interface.
 
-Dans un contexte où les cybermenaces augmentent et où les réglementations relatives à la sécurité des données se renforcent (RGPD, PCI-DSS, OWASP), les organisations ont besoin d'outils automatisés pour identifier rapidement les failles de sécurité dans leurs applications. Le testing de sécurité automatisé est devenu une composante essentielle du cycle de développement DevSecOps.
+In a context where cyberthreats are increasing and regulations related to data security are strengthening (GDPR, PCI-DSS, OWASP), organizations need automated tools to quickly identify security flaws in their applications. Automated security testing has become an essential component of the DevSecOps development cycle.
 
-## Pertinence du projet
+## Project Relevance
 
-Ce projet s'inscrit parfaitement dans la formation en cybersécurité et développement. Il combine plusieurs compétences clés :
+This project fits perfectly with training in cybersecurity and development. It combines several key competencies:
 
-- **Sécurité applicative** : compréhension des vulnérabilités web (OWASP Top 10)
-- **Architecture logicielle** : microservices, scalabilité, parallélisation
-- **Développement full-stack** : API REST, interfaces réactives
-- **DevOps/Infrastructure** : containerisation, orchestration, monitoring
-- **Asynchronisme** : queuing distribué avec workers
+- **Application Security**: Understanding of web vulnerabilities (OWASP Top 10)
+- **Software Architecture**: Microservices, scalability, parallelization
+- **Full-Stack Development**: REST APIs, reactive interfaces
+- **DevOps/Infrastructure**: Containerization, orchestration, monitoring
+- **Asynchronism**: Distributed queuing with workers
 
-## Contexte existant
+## Existing Context
 
-Plusieurs outils similaires existent sur le marché :
+Several similar tools exist on the market:
 
-| Outil | Avantages | Limitations |
-|-------|-----------|------------|
-| **OWASP ZAP** | Open-source, spécifique au web | Interface moins moderne, intégration cloud limitée |
-| **Burp Suite** | Puissant, très complet | Très coûteux, lourd en ressources |
-| **Nessus** | Polyvalent | Propriétaire, moins spécialisé pour le web |
-| **Qualys/Acunetix** | Commercial, complet | Coûteux, moins transparent |
+| Tool | Advantages | Limitations |
+|------|-----------|------------|
+| **OWASP ZAP** | Open-source, web-specific | Less modern UI, limited cloud integration |
+| **Burp Suite** | Powerful, comprehensive | Very expensive, resource-heavy |
+| **Nessus** | Versatile | Proprietary, less specialized for web |
+| **Qualys/Acunetix** | Commercial, complete | Expensive, less transparent |
 
-**Justification du projet maison :** SpiderByte offre :
-- Une interface moderne et intuitive adaptée aux besoins actuels
-- Une architecture flexible permettant l'ajout facile de nouveaux modules de scan
-- Une solution open-source et transparente
-- Une intégration cloud-native pour une scalabilité optimale
+**Justification for In-House Development:** SpiderByte offers:
+- A modern and intuitive interface adapted to current needs
+- A flexible architecture allowing easy addition of new scan modules
+- An open-source and transparent solution
+- Cloud-native integration for optimal scalability
 
-## Objectifs du projet
+## Project Objectives
 
-### Objectifs généraux
+### General Objectives
 
-1. Concevoir une plateforme de scanning de sécurité web **automatisée et scalable**
-2. Fournir une interface utilisateur **intuitive et responsive** pour les auditeurs de sécurité
-3. Permettre l'**exécution parallélisée et asynchrone** des scans longs
-4. Garantir la **sécurité des données** et l'isolation des utilisateurs
+1. Design an **automated and scalable** web security scanning platform
+2. Provide an **intuitive and responsive** user interface for security auditors
+3. Enable **parallelized and asynchronous execution** of long scans
+4. Guarantee **data security** and user isolation
 
-### Objectifs spécifiques
+### Specific Objectives
 
-1. **Backend API** : Créer une API REST sécurisée avec authentification JWT
-2. **Orchestration de tâches** : Implémenter un système de queuing asynchrone avec Celery
-3. **Modules de scan** : Intégrer au minimum 6 scanners spécialisés (SSL, headers, SQL injection, XSS, Nmap, Nuclei)
-4. **Persistance** : Mettre en place une base de données relationnelle pour historique des scans
-5. **Frontend réactif** : Développer une interface React avec gestion d'état et temps réel
-6. **Containerisation** : Conditionner l'ensemble via Docker et Docker Compose
+1. **Backend API**: Create a secure REST API with JWT authentication
+2. **Task Orchestration**: Implement an asynchronous queuing system with Celery
+3. **Scan Modules**: Integrate at least 6 specialized scanners (SSL, headers, SQL injection, XSS, Nmap, Nuclei)
+4. **Persistence**: Implement a relational database for scan history
+5. **Reactive Frontend**: Develop a React interface with state management and real-time capability
+6. **Containerization**: Package everything via Docker and Docker Compose
 
-## Livrables attendus vs réalisés
+## Expected vs. Achieved Deliverables
 
-| Livrable | Statut | Notes |
-|----------|--------|-------|
-| Architecture microservices | ✅ Réalisé | Docker Compose avec 6+ services |
-| Backend API FastAPI | ✅ Réalisé | Endpoints authentifiés et testés |
-| Frontend React/Vite | ✅ Réalisé | Interface complète avec dashboard |
-| 6 scanners de sécurité | ✅ Réalisé | SSL, Headers, SQL Injection, XSS, Nmap, Nuclei |
-| Authentification JWT | ✅ Réalisé | Registre et login fonctionnels |
-| Queue asynchrone Celery | ✅ Réalisé | Distribution des tâches sur workers |
-| Base de données PostgreSQL | ✅ Réalisé | Modèles et CRUD opérationnels |
-| Monitoring en temps réel | ✅ Réalisé | Flower pour Celery, WebSocket prêt |
-| Documentation complète | ✅ Réalisé | README, API docs, commentaires de code |
+| Deliverable | Status | Notes |
+|------------|--------|-------|
+| Microservices Architecture | Achieved | Docker Compose with 6+ services |
+| FastAPI Backend | Achieved | Authenticated and tested endpoints |
+| React/Vite Frontend | Achieved | Complete interface with dashboard |
+| 6 Security Scanners | Achieved | SSL, Headers, SQL Injection, XSS, Nmap, Nuclei |
+| JWT Authentication | Achieved | Functional registration and login |
+| Celery Async Queue | Achieved | Task distribution across workers |
+| PostgreSQL Database | Achieved | Operational models and CRUD |
+| Real-time Monitoring | Achieved | Flower for Celery, WebSocket ready |
+| Complete Documentation | Achieved | README, API docs, code comments |
 
-**Écarts identifiés :** Aucun écart majeur. Quelques améliorations futures ont été identifiées (voir Perspectives).
+**Identified Gaps:** No major gaps. Some future improvements have been identified (see Perspectives).
 
 ---
 
-# REVUE DE LITTÉRATURE
+# LITERATURE REVIEW
 
-## Documents et standards consultes
+## Consulted Documents and Standards
 
-### 1. Standards de sécurité web
+### 1. Web Security Standards
 
 **OWASP Top 10 (2021)** [1]  
-Référence absolue pour les vulnérabilités web modernes. Les modules de scan de SpiderByte ciblent directement ces catégories :
-- A01 : Broken Access Control
-- A02 : Cryptographic Failures (via SSL check)
-- A03 : Injection (SQL injection, XSS)
-- A05 : Broken Access Control
+Absolute reference for modern web vulnerabilities. SpiderByte's scan modules directly target these categories:
+- A01: Broken Access Control
+- A02: Cryptographic Failures (via SSL check)
+- A03: Injection (SQL injection, XSS)
+- A05: Broken Access Control
 - etc.
 
-Nous avons structuré nos scanners en fonction de ces catégories pour garantir une couverture pertinente.
+We structured our scanners according to these categories to ensure comprehensive coverage.
 
-### 2. Frameworks et architectures
+### 2. Frameworks and Architectures
 
 **The Twelve-Factor App** [2]  
-Principes appliqués :
-- Variables d'environnement pour configuration
-- Services stateless
-- Logs à stdout
-- Processus durables
+Applied Principles:
+- Environment variables for configuration
+- Stateless services
+- Logs to stdout
+- Durable processes
 
 **Microservices Architecture** [3]  
-Justification : chaque service (frontend, backend, worker) peut évoluer indépendamment, scaling horizontal facile.
+Justification: Each service (frontend, backend, worker) can evolve independently, easy horizontal scaling.
 
-### 3. Outils et technologies
+### 3. Tools and Technologies
 
 **FastAPI Documentation** [4]  
-- Framework léger et performant pour Python
-- Validation automatique via Pydantic
-- Documentation Swagger intégrée
-- Support natif async/await
+- Lightweight and performant framework for Python
+- Automatic validation via Pydantic
+- Integrated Swagger documentation
+- Native async/await support
 
 **Celery Framework** [5]  
-- Actor model pour distribution des tâches
-- Support multiple backends (Redis, RabbitMQ)
-- Retry automation et timeout handling
-- Monitoring via Flower
+- Actor model ideal for parallelized processing
+- Automatic retry logic
+- Multiple backend support (Redis, RabbitMQ)
+- Integrated monitoring via Flower
 
-**React et Vite** [6]  
-- Compilation rapide et HMR pour développement
-- Bundle optimization automatique
-- JSX comme standard de facto moderne
+**React and Vite** [6]  
+- Fast compilation and HMR for development
+- Automatic bundle optimization
+- JSX as modern de facto standard
 
-### 4. Sécurité applicative
+### 4. Application Security
 
 **NIST Cybersecurity Framework** [7]  
-Cadre aligné avec nos pratiques de hashing (bcrypt), JWT (OAuth2).
+Framework aligned with our hashing practices (bcrypt), JWT (OAuth2).
 
 **CWE/SANS Top 25** [8]  
-Référentiel des 25 vulnérabilités les plus dangereuses — nos scanners ciblent les catégories majeures.
+Reference of the 25 most dangerous vulnerabilities — our scanners target major categories.
 
-## Systèmes existants similaires
+## Similar Existing Systems
 
 ### OWASP ZAP (Zed Attack Proxy)
 
-**Comparaison :**
-- ✅ Open-source, très mature
-- ✅ Excellent pour le penetration testing manuel
-- ❌ Interface Swing (2000s), moins moderne
-- ❌ Moins adapté à une intégration cloud
-- ❌ Pas de concept d'utilisateurs multiples
-- ✅ SpiderByte améliore : interface moderne, multi-utilisateurs, cloud-native
+**Comparison:**
+- Open-source, very mature
+- Excellent for manual penetration testing
+- Swing UI (2000s), less modern
+- Less suitable for cloud integration
+- No concept of multiple users
+- SpiderByte improves: modern UI, multi-user, cloud-native
 
 ### Burp Suite Community
 
-**Comparaison :**
-- ✅ Interface moderne et complète
-- ✅ Très puissant pour le testing manuel
-- ❌ Édition community très limitée (pas d'automation)
-- ❌ Très lourd en ressources
-- ❌ Propriétaire et cher
-- ✅ SpiderByte améliore : gratuit, léger, automation intégrée
+**Comparison:**
+- Modern and complete UI
+- Very powerful for manual testing
+- Community edition very limited (no automation)
+- Very resource-heavy
+- Proprietary and expensive
+- SpiderByte improves: free, lightweight, integrated automation
 
 ### Nessus Community
 
-**Comparaison :**
-- ✅ Polyvalent (vulnérabilités réseau + application)
-- ❌ Moins spécialisé pour le web
-- ❌ Interface propriétaire
-- ❌ Limitations en édition community
-- ✅ SpiderByte améliore : spécialisation web, full-stack
+**Comparison:**
+- Versatile (network + application vulnerabilities)
+- Less specialized for web
+- Proprietary interface
+- Community edition limitations
+- SpiderByte improves: web specialization, full-stack
 
-## Justification de notre approche
+## Justification of Our Approach
 
-**Nous avons choisi de développer SpiderByte plutôt que d'utiliser/intégrer ces outils existants car :**
+**We chose to develop SpiderByte rather than use/integrate existing tools because:**
 
-1. **Transparence** : Code open-source, pas de boîtes noires
-2. **Flexibilité** : Ajouter/modifier des scanners facilement
-3. **Modernité** : Stack tech actuelle (React, FastAPI, Docker)
-4. **Éducatif** : Apprentissage complet du pipeline de sécurité
-5. **Scalabilité** : Architecture cloud-native dès la conception
-6. **Coût** : Gratuit et sans limitation d'utilisation
+1. **Transparency**: Open-source code, no black boxes
+2. **Flexibility**: Easy to add/modify scanners
+3. **Modernity**: Current tech stack (React, FastAPI, Docker)
+4. **Educational**: Complete security pipeline learning
+5. **Scalability**: Cloud-native architecture from conception
+6. **Cost**: Free and unlimited usage
 
 ---
 
-# CHAPITRE 1 : ARCHITECTURE ET INFRASTRUCTURE
+# CHAPTER 1: ARCHITECTURE AND INFRASTRUCTURE
 
-## 1.1 Vue d'ensemble de l'architecture
+## 1.1 Architectural Overview
 
-SpiderByte suit une **architecture microservices containerisée** avec séparation claire des responsabilités :
+SpiderByte follows a **containerized microservices architecture** with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -224,32 +226,32 @@ SpiderByte suit une **architecture microservices containerisée** avec séparati
      └──────────┘  └──────────┘  └───────────┘
 ```
 
-### Services principaux
+### Main Services
 
-| Service | Rôle | Technologie | Port |
-|---------|------|-------------|------|
-| **nginx** | Point d'entrée, reverse proxy | Nginx | 80 |
-| **frontend** | Interface utilisateur | React 18 + Vite | 3000 |
-| **api** | API REST sécurisée | FastAPI + Uvicorn | 8000 |
-| **worker** | Exécution async des scans | Celery + Python | — |
-| **redis** | Broker de messages et cache | Redis | 6379 |
-| **postgres** | Persistance des données | PostgreSQL 15 | 5432 |
-| **flower** | Monitoring des tâches | Flower (Celery UI) | 5555 |
+| Service | Role | Technology | Port |
+|---------|------|-----------|------|
+| **nginx** | Entry point, reverse proxy | Nginx | 80 |
+| **frontend** | User interface | React 18 + Vite | 3000 |
+| **api** | Secure REST API | FastAPI + Uvicorn | 8000 |
+| **worker** | Async scan execution | Celery + Python | — |
+| **redis** | Message broker and cache | Redis | 6379 |
+| **postgres** | Data persistence | PostgreSQL 15 | 5432 |
+| **flower** | Task monitoring | Flower (Celery UI) | 5555 |
 
-## 1.2 Flux de données et communication
+## 1.2 Data Flow and Communication
 
-### Cas d'usage : Initialiser un scan
+### Use Case: Initialize a Scan
 
 ```
-1. Utilisateur → Frontend (bouton "Scanner")
-   └─ POST /api/scan/deep avec {url, scan_type}
+1. User → Frontend (clickbutton "Scan")
+   └─ POST /api/scan/deep with {url, scan_type}
 
-2. Frontend → API (authentification JWT)
+2. Frontend → API (JWT authentication)
    └─ Header: "Authorization: Bearer <JWT_TOKEN>"
 
 3. API → Redis (enqueue task)
    └─ Celery.send_task("scan_task", [url, user_id, scan_type])
-   └─ Retourne task_id immédiatement
+   └─ Returns task_id immediately
 
 4. API → PostgreSQL (create ScanResult record)
    └─ INSERT INTO scan_results (task_id, url, status='QUEUED')
@@ -257,21 +259,21 @@ SpiderByte suit une **architecture microservices containerisée** avec séparati
 5. Frontend → Polling/WebSocket
    └─ GET /api/scan/status/{task_id}
 
-6. Celery Worker ← Redis (récupère task)
-   └─ Exécution des modules de scan en séquence
-   └─ Mise à jour du statut via self.update_state()
+6. Celery Worker ← Redis (retrieves task)
+   └─ Sequentially executes scan modules
+   └─ Updates status via self.update_state()
 
 7. Worker → PostgreSQL (store results)
    └─ UPDATE scan_results SET status='FINISHED', result=json
 
-8. Frontend ← API (récupère résultats)
+8. Frontend ← API (retrieves results)
    └─ GET /api/scans/{scan_id}
-   └─ Affichage du rapport
+   └─ Displays report
 ```
 
-## 1.3 Modèle de données
+## 1.3 Data Model
 
-### Utilisateurs (Users)
+### Users (Users)
 
 ```
 users
@@ -282,7 +284,7 @@ users
 └── created_at (TIMESTAMP)
 ```
 
-### Résultats de scans (ScanResult)
+### Scan Results (ScanResult)
 
 ```
 scan_results
@@ -292,11 +294,11 @@ scan_results
 ├── url (VARCHAR)
 ├── scan_type (VARCHAR: 'light' | 'deep')
 ├── status (VARCHAR: 'QUEUED' | 'PROGRESS' | 'FINISHED' | 'FAILURE')
-├── result (JSON, résultats complets)
+├── result (JSON, full results)
 └── created_at, updated_at (TIMESTAMP)
 ```
 
-### Structure JSON des résultats
+### Results JSON Structure
 
 ```json
 {
@@ -325,227 +327,227 @@ scan_results
 }
 ```
 
-## 1.4 Scalabilité
+## 1.4 Scalability
 
-### Scaling horizontal
+### Horizontal Scaling
 
-La plateforme permet :
+The platform allows:
 
-1. **Frontend scaling** : Déployer N instances derrière load-balancer
-2. **API scaling** : Déployer N instances FastAPI, stateless
-3. **Worker scaling** : Ajouter N workers Celery automatiquement
-4. **Broker redundancy** : Redis Sentinel ou Cluster
-5. **Database replication** : PostgreSQL replication
+1. **Frontend scaling**: Deploy N instances behind load-balancer
+2. **API scaling**: Deploy N stateless FastAPI instances
+3. **Worker scaling**: Automatically add N Celery workers
+4. **Broker redundancy**: Redis Sentinel or Cluster
+5. **Database replication**: PostgreSQL replication
 
-### Limites actuelles
+### Current Limitations
 
-- Single Redis instance (point de défaillance potentiel)
-- PostgreSQL sans replication (haute disponibilité)
-- Pas de rate limiting ou throttling
-- Pas de circuit breaker
+- Single Redis instance (potential failure point)
+- PostgreSQL without replication (high availability)
+- No rate limiting or throttling
+- No circuit breaker
 
-**Recommandations pour production :**
-- Redis Cluster pour haute disponibilité
-- PostgreSQL avec réplication streaming
+**Production Recommendations:**
+- Redis Cluster for high availability
+- PostgreSQL with streaming replication
 - Kubernetes for orchestration
-- Service mesh (Istio) pour observabilité
+- Service mesh (Istio) for observability
 
 ---
 
-# CHAPITRE 2 : TECHNOLOGIES ET JUSTIFICATIONS
+# CHAPTER 2: TECHNOLOGIES AND JUSTIFICATIONS
 
-## 2.1 Stack backend
+## 2.1 Backend Stack
 
 ### FastAPI
 
-**Choix :** Framework Python moderne pour API REST  
-**Justifications :**
-- ✅ Type hints natifs → validation auto Pydantic
-- ✅ Performance proche d'Express.js ou Go
-- ✅ Documentation Swagger auto-générée
-- ✅ Support async/await natif
-- ✅ Courbe apprentissage douce
+**Choice:** Modern Python framework for REST APIs
+**Justifications:**
+- Native type hints → auto validation with Pydantic
+- Performance close to Express.js or Go
+- Auto-generated Swagger documentation
+- Native async/await support
+- Gentle learning curve
 
-**Alternative considérée :** Django REST Framework
-- ❌ Plus lourd et overkill pour une API simple
-- ❌ Moins performant
-- ✅ Cette approche FastAPI + Celery = meilleur choix
+**Alternative Considered:** Django REST Framework
+- Heavier and overkill for simple API
+- Less performant
+- FastAPI + Celery approach = better choice
 
 ### Celery
 
-**Choix :** Task queue distribué pour async job processing  
-**Justifications :**
-- ✅ Actor model idéal pour processing parallélisé
-- ✅ Retry logic automatique
-- ✅ Multiple backend support (Redis, RabbitMQ, SQS)
-- ✅ Monitoring via Flower intégré
-- ✅ Timeout et deadline handling
+**Choice:** Distributed task queue for async job processing
+**Justifications:**
+- Actor model ideal for parallelized processing
+- Automatic retry logic
+- Multiple backend support (Redis, RabbitMQ, SQS)
+- Integrated Flower monitoring
+- Timeout and deadline handling
 
-**Pourquoi async ?**
-Les scans de sécurité peuvent durer *plusieurs heures* :
-- SSL check : ~2-5s
-- Header check : ~1-2s
-- SQL injection : 5-30min (nombreux payloads)
-- Nuclei scan : 10-60min (dépend templates)
+**Why Async?**
+Security scans can last *several hours*:
+- SSL check: ~2-5s
+- Header check: ~1-2s
+- SQL injection: 5-30min (many payloads)
+- Nuclei scan: 10-60min (depends on templates)
 
-Sans async, l'API bloquerait l'utilisateur indéfiniment. Avec Celery, la tâche est lancée et l'utilisateur peut checker le statut via polling.
+Without async, the API would block the user indefinitely. With Celery, the task is launched and the user can check status via polling.
 
 ### PostgreSQL
 
-**Choix :** Base de données relationnelle  
-**Justifications :**
-- ✅ Données structurées (users, scans avec références)
-- ✅ ACID compliance pour intégrité
-- ✅ JSON column type pour flex (résultats de scans)
-- ✅ Full-text search si needed (logs)
-- ✅ Mature et production-ready
+**Choice:** Relational database
+**Justifications:**
+- Structured data (users, scans with references)
+- ACID compliance for integrity
+- JSON column type for flexibility (scan results)
+- Full-text search if needed (logs)
+- Mature and production-ready
 
-**Alternative rejetée :** MongoDB
-- ❌ Overkill pour cette application
-- ❌ Pas besoin de flexibilité schema
+**Alternative Rejected:** MongoDB
+- Overkill for this application
+- No need for schema flexibility
 
 ### Redis
 
-**Choix :** In-memory data structure store  
-**Justifications :**
-- ✅ Broker Celery ultra-fast
-- ✅ Caching pour résultats fréquents
-- ✅ Session storage si needed
-- ✅ Pub/Sub pour WebSocket realtime (futur)
+**Choice:** In-memory data structure store
+**Justifications:**
+- Ultra-fast Celery broker
+- Caching for frequent results
+- Session storage if needed
+- Pub/Sub for WebSocket realtime (future)
 
-## 2.2 Stack frontend
+## 2.2 Frontend Stack
 
 ### React 18
 
-**Choix :** Librairie JS pour UI componentisée  
-**Justifications :**
-- ✅ Composants réutilisables et testables
-- ✅ Virtual DOM → rendering performant
-- ✅ Hooks pour state management simple
-- ✅ Écosystème massive (18 ans d'évolution)
-- ✅ Utilisé par 50%+ des web dev
+**Choice:** JavaScript library for componentized UI
+**Justifications:**
+- Reusable and testable components
+- Virtual DOM → performant rendering
+- Hooks for simple state management
+- Massive ecosystem (18 years of evolution)
+- Used by 50%+ of web developers
 
 ### Vite
 
-**Choix :** Build tool moderne  
-**Justifications :**
-- ✅ Hot Module Replacement (HMR) ultra rapide
-- ✅ Native ES modules au dev, optimisation prod auto
-- ✅ Configuration minimale
-- ✅ 10-100x plus rapide que Webpack/React Create App
-- ✅ Bundle size au final
+**Choice:** Modern build tool
+**Justifications:**
+- Ultra-fast Hot Module Replacement (HMR)
+- Native ES modules in dev, auto-optimized prod
+- Minimal configuration
+- 10-100x faster than Webpack/React Create App
+- Smaller final bundle size
 
 ### TailwindCSS
 
-**Choix :** Utility-first CSS framework  
-**Justifications :**
-- ✅ Rapid prototyping
-- ✅ Consistent design system
-- ✅ Minimal CSS footprint (purging)
-- ✅ Responsive design helpers
-- ✅ Dark mode support built-in
+**Choice:** Utility-first CSS framework
+**Justifications:**
+- Rapid prototyping
+- Consistent design system
+- Minimal CSS footprint (purging)
+- Responsive design helpers
+- Built-in dark mode support
 
-**Alternative rejetée :** Bootstrap
-- ❌ Plus de CSS à charger
-- ❌ Design moins moderne
+**Alternative Rejected:** Bootstrap
+- More CSS to load
+- Less modern design
 
 ## 2.3 Infrastructure & DevOps
 
 ### Docker & Docker Compose
 
-**Choix :** Containerisation et orchestration locale/dev  
-**Justifications :**
-- ✅ Reproducibilité entre machines
-- ✅ Isolation des services
-- ✅ Déploiement simplifié (single `docker-compose up`)
-- ✅ Développeurs et production = même env
-- ✅ Elimine "works on my machine"
+**Choice:** Containerization and local/dev orchestration
+**Justifications:**
+- Reproducibility across machines
+- Service isolation
+- Simplified deployment (single `docker-compose up`)
+- Dev and production = same environment
+- Eliminates "works on my machine"
 
-**Pour production :** Recommandation Kubernetes + Helm
+**For Production:** Kubernetes + Helm recommended
 
 ### Nginx
 
-**Choix :** Reverse proxy et serveur statique  
-**Justifications :**
-- ✅ Très performant et léger
-- ✅ Configuration simple pour routing
-- ✅ Compression gzip auto
-- ✅ SSL/TLS termination
-- ✅ Load balancing futur
+**Choice:** Reverse proxy and static server
+**Justifications:**
+- Very performant and lightweight
+- Simple routing configuration
+- Auto gzip compression
+- SSL/TLS termination
+- Future load balancing
 
-## 2.4 Scanners de sécurité
+## 2.4 Security Scanners
 
 ### SSL/TLS Check
 
-**Technologie :** Python `ssl` library + `socket`  
-**Détecte :**
-- Version du protocole SSL/TLS
-- Validité du certificat
-- Date d'expiration
-- Chaîne de certificats
+**Technology:** Python `ssl` library + `socket`
+**Detects:**
+- SSL/TLS protocol version
+- Certificate validity
+- Expiration date
+- Certificate chain
 
 ### Header Security Check
 
-**Technologie :** HTTP requests + analysis  
-**Détecte :**
-- Headers de sécurité manquants (CSP, X-Frame-Options, etc.)
-- Headers malconfigurés
-- Versions de serveur exposées (banner grabbing)
+**Technology:** HTTP requests + analysis
+**Detects:**
+- Missing security headers (CSP, X-Frame-Options, etc.)
+- Misconfigured headers
+- Exposed server versions (banner grabbing)
 
 ### SQL Injection
 
-**Technologie :** Pattern matching + payloads classiques  
-**Détecte :**
-- Erreurs SQL exposées
+**Technology:** Pattern matching + classic payloads
+**Detects:**
+- Exposed SQL errors
 - Bool-based blind SQL injection
 - Time-based blind SQL injection
 - Union-based injection
 
 ### XSS (Cross-Site Scripting)
 
-**Technologie :** Pattern matching + payload fuzz  
-**Détecte :**
+**Technology:** Pattern matching + payload fuzz
+**Detects:**
 - Reflected XSS
-- Pattern dans les réponses HTML
+- HTML response patterns
 - Encoding failures
 
 ### Nmap
 
-**Technologie :** nmap system binary  
-**Détecte :**
-- Ports ouverts
-- Services et versions
-- Vulnérabilités connues (NSE scripts)
+**Technology:** nmap system binary
+**Detects:**
+- Open ports
+- Services and versions
+- Known vulnerabilities (NSE scripts)
 
 ### Nuclei
 
-**Technologie :** YAML-based vulnerability templates  
-**Détecte :**
-- Milliers de vulnérabilités web
+**Technology:** YAML-based vulnerability templates
+**Detects:**
+- Thousands of web vulnerabilities
 - Misconfiguration
-- Exposures (API keys, fichiers sensibles)
+- Exposures (API keys, sensitive files)
 
-| Scanner | Vitesse | Couverture | Faux positifs |
-|---------|---------|-----------|---------------|
-| SSL | Ultra-rapide | Certificats | Très bas |
-| Headers | Ultra-rapide | HTTP | Très bas |
-| SQL Injection | Lent | Bases données | Moyen-haut |
-| XSS | Moyen | Applications web | Moyen |
-| Nmap | Moyen | Réseau | Faible |
-| Nuclei | Lent | Très large | Moyen |
+| Scanner | Speed | Coverage | False Positives |
+|---------|-------|----------|-----------------|
+| SSL | Ultra-fast | Certificates | Very low |
+| Headers | Ultra-fast | HTTP | Very low |
+| SQL Injection | Slow | Databases | Medium-high |
+| XSS | Medium | Web apps | Medium |
+| Nmap | Medium | Network | Low |
+| Nuclei | Slow | Very large | Medium |
 
 ---
 
-# CHAPITRE 3 : DOCUMENTATION TECHNIQUE
+# CHAPTER 3: TECHNICAL DOCUMENTATION
 
-## 3.1 Architecture du code backend
+## 3.1 Backend Code Architecture
 
-### Organisation des répertoires
+### Directory Organization
 
 ```
 backend/
 ├── api/
-│   ├── main.py              # Point d'entrée FastAPI
+│   ├── main.py              # FastAPI entry point
 │   ├── schemas.py           # Pydantic models (validation)
 │   └── security.py          # JWT, bcrypt, auth
 ├── database/
@@ -563,41 +565,41 @@ backend/
 │       ├── xss_check.py
 │       ├── nmap_scan.py
 │       └── nuclei_scan.py
-├── Dockerfile              # Image définition
-├── requirements.txt        # Dépendances pip
-└── nginx.conf             # Config reverse proxy
+├── Dockerfile              # Image definition
+├── requirements.txt        # Pip dependencies
+└── nginx.conf             # Reverse proxy config
 ```
 
-### Flux d'exécution du scan
+### Scan Execution Flow
 
 ```
-1. POST /scan/light ou /scan/deep
+1. POST /scan/light or /scan/deep
    └─ @router.post in main.py
-   ├─ Validation JWT (AuthContext)
-   ├─ Validation URL (Pydantic)
-   ├─ Créer record DB avec status='QUEUED'
+   ├─ JWT Validation (AuthContext)
+   ├─ URL Validation (Pydantic)
+   ├─ Create DB record with status='QUEUED'
    └─ Celery.apply_async("scan_task", [url, user_id, scan_type])
 
 2. Celery Worker picks up task
    └─ @celery_instance.task(bind=True) in tasks.py
-   ├─ resolve_scan_plan(scan_type) → liste de modules
+   ├─ resolve_scan_plan(scan_type) → module list
    ├─ update_state('PROGRESS', meta={...})
-   └─ Exécuter sequentiellement :
+   └─ Execute sequentially:
       for module in selected_scanners:
       ├─ module.scan(url)
-      ├─ capture result ou exception
-      └─ Incrémenter progress meta
+      ├─ capture result or exception
+      └─ Increment progress meta
 
-3. Stocker résultats
+3. Store results
    └─ UPDATE scan_results SET status='FINISHED', result=json_report
 
 4. Frontend polls /scan/status/{task_id}
-   └─ GET retourne state='SUCCESS' + results
+   └─ GET returns state='SUCCESS' + results
 ```
 
-## 3.2 Endpoints API
+## 3.2 API Endpoints
 
-### Authentification
+### Authentication
 
 **POST /register**
 ```
@@ -636,11 +638,11 @@ Response:
 {
   "state": "PROGRESS",
   "meta": {
-    "status": "Analyse deep en cours... (3/6)",
-    "modules_finis": {"ssl_check": "2.3s", "header_check": "1.1s"},
-    "total_a_faire": 6,
+    "status": "Deep analysis in progress... (3/6)",
+    "modules_finished": {"ssl_check": "2.3s", "header_check": "1.1s"},
+    "total_to_do": 6,
     "scan_type": "deep",
-    "temps_total_ecoule": "3.4s"
+    "total_time_elapsed": "3.4s"
   }
 }
 ```
@@ -690,10 +692,10 @@ Response: 200
 **DELETE /scans/{scan_id}**
 ```
 Header: Authorization: Bearer <token>
-Response: 204 No Content (ou 403 Forbidden si pas owner)
+Response: 204 No Content (or 403 Forbidden if not owner)
 ```
 
-### Gestion des erreurs
+### Error Handling
 
 ```
 401 Unauthorized
@@ -728,9 +730,9 @@ Response: 204 No Content (ou 403 Forbidden si pas owner)
 }
 ```
 
-## 3.3 Structure frontend
+## 3.3 Frontend Structure
 
-### Arborescence composants
+### Component Tree
 
 ```
 src/
@@ -744,29 +746,29 @@ src/
 ├── components/
 │   ├── Navbar.jsx           # Top navigation
 │   ├── HeroSection.jsx      # Landing hero
-│   ├── ScanCard.jsx         # Card de scan
+│   ├── ScanCard.jsx         # Scan card
 │   ├── VulnerabilityCard.jsx# Vuln display
-│   ├── AuthForm.jsx         # Form auth réutilisable
+│   ├── AuthForm.jsx         # Reusable auth form
 │   ├── ProtectedRoute.jsx   # Route guard
 │   ├── SiteFooter.jsx       # Footer
 │   └── dashboard/
-│       ├── VulnerabilityList.jsx      # Liste vulns
-│       ├── VulnerabilityDetails.jsx   # Détails
+│       ├── VulnerabilityList.jsx      # Vulns list
+│       ├── VulnerabilityDetails.jsx   # Details
 │       ├── VulnerabilityDrawer.jsx    # Side panel
-│       ├── VulnerabilityItem.jsx      # Item liste
+│       ├── VulnerabilityItem.jsx      # List item
 │       └── severity.js                # Severity utils
 ├── context/
-│   ├── AuthContext.jsx      # Auth state global
-│   ├── ScanContext.jsx      # Scan state global
+│   ├── AuthContext.jsx      # Auth global state
+│   ├── ScanContext.jsx      # Scan global state
 │   └── ToastContext.jsx     # Toast notifications
 └── styles.css               # Global styles
 ```
 
-### Flux d'état (React Context)
+### State Flow (React Context)
 
 **AuthContext**
 ```javascript
-// Expose:
+// Exposes:
 - user: {id, email, username}
 - token: JWT
 - isAuthenticated: bool
@@ -777,7 +779,7 @@ src/
 
 **ScanContext**
 ```javascript
-// Expose:
+// Exposes:
 - scans: [{id, url, status, created_at}]
 - currentScan: {task_id, status, result}
 - isLoading: bool
@@ -789,13 +791,13 @@ src/
 
 **ToastContext**
 ```javascript
-// Expose:
+// Exposes:
 - showToast(message, type='success'|'error'|'info')
 ```
 
-## 3.4 Base de données
+## 3.4 Database
 
-### Modèles SQLAlchemy
+### SQLAlchemy Models
 
 **User**
 ```python
@@ -821,7 +823,7 @@ class ScanResult(Base):
     url = Column(String)
     scan_type = Column(String)  # 'light' | 'deep'
     status = Column(String)     # 'QUEUED' | 'PROGRESS' | 'FINISHED' | 'FAILURE'
-    result = Column(JSON)       # Stocke tout le rapport JSON
+    result = Column(JSON)       # Full results stored as JSON
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -829,45 +831,45 @@ class ScanResult(Base):
     user = relationship("User", back_populates="scan_results")
 ```
 
-### Scripts migration (futur : Alembic)
+### Migration Scripts (Future: Alembic)
 
-Actuellement, les tables sont créées automatiquement via :
+Currently, tables are created automatically via:
 ```python
 models.Base.metadata.create_all(bind=engine)
 ```
 
-**Recommandation :** Ajouter Alembic pour versionner les schémas.
+**Recommendation:** Add Alembic for schema versioning.
 
 ---
 
-# CHAPITRE 4 : DOCUMENTATION D'UTILISATION
+# CHAPTER 4: USAGE DOCUMENTATION
 
-## 4.1 Installation et lancement
+## 4.1 Installation and Launching
 
-### Prérequis
+### Prerequisites
 
 - Docker Desktop 4.0+
 - Docker Compose 2.0+
 - Git
-- Navigateur moderne (Chrome, Firefox, Safari, Edge)
+- Modern browser (Chrome, Firefox, Safari, Edge)
 
-**Ressources minimales :**
-- RAM : 4 GB
-- Disk : 2 GB
-- CPU : 2 cores
+**Minimum Resources:**
+- RAM: 4 GB
+- Disk: 2 GB
+- CPU: 2 cores
 
-### Installation locale (Développement)
+### Local Installation (Development)
 
-#### 1. Clone le repository
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/your-org/spiderbyte.git
 cd spiderbyte
 ```
 
-#### 2. Configure les variables d'environnement
+#### 2. Configure Environment Variables
 
-Crée un fichier `.env` à la racine :
+Create a `.env` file at the root:
 
 ```env
 # Database
@@ -881,20 +883,20 @@ CELERY_BROKER_URL=redis://redis:6379/0
 CELERY_RESULT_BACKEND=redis://redis:6379/0
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 
-# JWT Secret (change en production!)
+# JWT Secret (change in production!)
 JWT_SECRET=your-super-secret-key-min-32-chars
 
 # Frontend
 VITE_API_URL=http://localhost:8000
 ```
 
-#### 3. Lance les services
+#### 3. Launch Services
 
 ```bash
 docker-compose up -d
 ```
 
-Cela démarre :
+This starts:
 - PostgreSQL (port 5433)
 - Redis (port 6379)
 - Backend API (port 8000)
@@ -902,13 +904,13 @@ Cela démarre :
 - Flower (port 5555)
 - Nginx (port 80)
 
-#### 4. Initialise la DB (si nécessaire)
+#### 4. Initialize DB (if necessary)
 
 ```bash
 docker-compose exec api python -c "from backend.database.database import engine; from backend.database.models import Base; Base.metadata.create_all(bind=engine)"
 ```
 
-#### 5. Accède à l'application
+#### 5. Access the Application
 
 ```
 Frontend    : http://localhost
@@ -917,98 +919,98 @@ API Docs   : http://localhost/api/docs
 Flower     : http://localhost:5555
 ```
 
-## 4.2 Interface utilisateur
+## 4.2 User Interface
 
-### Page d'accueil (Landing)
+### Landing Page
 
-Affiche :
-- Présentation du projet
-- Bouton "Commencer" (lien Login/Signup)
+Displays:
+- Project presentation
+- "Get Started" button (Login/Signup link)
 - Features overview
 - Call-to-action
 
-### Inscription et Connexion
+### Registration and Login
 
-**Signup :**
-1. Remplis email, username, password
+**Signup:**
+1. Fill in email, username, password
 2. Password strength indicator
-3. Clique "Créer un compte"
-4. Redirection auto Dashboard
+3. Click "Create Account"
+4. Auto-redirect to Dashboard
 
-**Login :**
-1. Email + password (ou username)
-2. "Oublié password" (futur)
-3. Clique "Connexion"
-4. Redirection Dashboard
+**Login:**
+1. Email + password (or username)
+2. "Forgot Password" (future)
+3. Click "Sign In"
+4. Redirect to Dashboard
 
-### Dashboard principal
+### Main Dashboard
 
-Affiche :
-- **Header** : Username, bouton logout
-- **Sidebar** : Navigation (Home, History, Settings)
-- **Main panel** : 
-  - Section "Nouveau scan"
-  - Historique des scans passés
-  - Résultats détaillés
+Displays:
+- **Header**: Username, logout button
+- **Sidebar**: Navigation (Home, History, Settings)
+- **Main Panel**: 
+  - "New Scan" section
+  - Past scans history
+  - Detailed results
 
-### Nouveau scan
+### New Scan
 
-Étapes :
-1. Saisir URL (avec validation)
-2. Choisir type de scan
-   - **Light** : Rapide (~30s)
-   - **Deep** : Complet (~30-60min)
-3. Clique "Lancer le scan"
-4. Redirection vers progress view
+Steps:
+1. Enter URL (with validation)
+2. Choose scan type
+   - **Light**: Fast (~30s)
+   - **Deep**: Complete (~30-60min)
+3. Click "Start Scan"
+4. Redirect to progress view
 
-### Suivi du scan en temps réel
+### Real-Time Scan Tracking
 
-Affiche :
+Displays:
 - Progress bar
-- Modules en cours d'exécution
-- Modules terminés (✓)
-- Temps écoulé
-- Temps estimé restant
-- Bouton "Annuler" (futur)
+- Running modules
+- Completed modules (✓)
+- Elapsed time
+- Estimated remaining time
+- Cancel button (future)
 
-Une fois terminé, affiche le rapport.
+Once complete, displays report.
 
-### Résultats de scan
+### Scan Results
 
-Affiche par module :
-- **SSL Check** : Grade A-F, détails certificat, expiration
-- **Header Check** : Headers présents/absent, score
-- **SQL Injection** : Vuln trouvées, payloads, proof-of-concept
-- **XSS** : Vecteurs d'attaque, positions
-- **Nmap** : Ports ouverts, services, versions
-- **Nuclei** : Vulns par sévérité (Critical, High, Medium, Low)
+Display by module:
+- **SSL Check**: Grade A-F, certificate details, expiration
+- **Header Check**: Headers present/absent, score
+- **SQL Injection**: Vulns found, payloads, proof-of-concept
+- **XSS**: Attack vectors, positions
+- **Nmap**: Open ports, services, versions
+- **Nuclei**: Vulns by severity (Critical, High, Medium, Low)
 
-Chaque vulnérabilité affiche :
-- ✅ Titre
-- 📊 Sévérité (icone + couleur)
-- 📝 Description
-- 🔗 Proof-of-concept (URL, payload)
-- 📚 Recommandation de fix
+Each vulnerability displays:
+- Title
+- Severity (icon + color)
+- Description
+- Proof-of-concept (URL, payload)
+- Fix recommendation
 
-### Historique des scans
+### Scan History
 
-Tableau avec colonnes :
-- URL scannée
-- Type de scan (light | deep)
-- Statut (✓ Finished | ⏳ Queued | 🔄 Progress | ❌ Failed)
-- Date de création
+Table with columns:
+- Scanned URL
+- Scan type (light | deep)
+- Status (Finished | Queued | Progress | Failed)
+- Creation date
 - Actions (View, Delete)
 
-Filtrage :
-- Par statut
-- Par date
-- Par URL
+Filtering:
+- By status
+- By date
+- By URL
 
 Pagination (50 scans/page)
 
-## 4.3 Utilisation API (pour développeurs)
+## 4.3 API Usage (for Developers)
 
-### Exemple complet avec cURL
+### Complete cURL Examples
 
 #### Signup
 
@@ -1043,7 +1045,7 @@ curl -X POST http://localhost:8000/api/login \
 }
 ```
 
-#### Lancer un scan
+#### Start a Scan
 
 ```bash
 TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -1060,7 +1062,7 @@ curl -X POST http://localhost:8000/api/scan/deep \
 }
 ```
 
-#### Checker le statut
+#### Check Status
 
 ```bash
 curl -X GET "http://localhost:8000/api/scan/status/abc-123-def-456" \
@@ -1070,20 +1072,20 @@ curl -X GET "http://localhost:8000/api/scan/status/abc-123-def-456" \
 {
   "state": "PROGRESS",
   "meta": {
-    "status": "Analyse deep en cours... (3/6)",
-    "modules_finis": {
+    "status": "Deep analysis in progress... (3/6)",
+    "modules_finished": {
       "ssl_check": "2.3s",
       "header_check": "1.1s",
       "nmap_scan": "15.4s"
     },
-    "total_a_faire": 6,
+    "total_to_do": 6,
     "scan_type": "deep",
-    "temps_total_ecoule": "18.8s"
+    "total_time_elapsed": "18.8s"
   }
 }
 ```
 
-#### Récupérer les résultats
+#### Retrieve Results
 
 ```bash
 curl -X GET "http://localhost:8000/api/scans/abc-123-def-456" \
@@ -1110,67 +1112,67 @@ curl -X GET "http://localhost:8000/api/scans/abc-123-def-456" \
 }
 ```
 
-## 4.4 Fonctionnalités avancées et configuration
+## 4.4 Advanced Features and Configuration
 
-### Monitoring avec Flower
+### Monitoring with Flower
 
-Accède à http://localhost:5555
+Access http://localhost:5555
 
-Affiche :
-- Workers actifs
-- Tâches en queue
-- Tâches complétées
-- Durée d'exécution par tâche
-- Graphiques de performance
+Displays:
+- Active workers
+- Tasks in queue
+- Completed tasks
+- Execution time per task
+- Performance graphs
 
 ### Logs
 
-Consulte les logs des services :
+View service logs:
 
 ```bash
 # Backend API
 docker-compose logs api
 
-# Workers Celery
-docker-compose logs celery
+# Celery workers
+docker-compose logs worker
 
 # Frontend
 docker-compose logs frontend
 
-# Tous
+# All
 docker-compose logs -f
 ```
 
-### Performance tuning
+### Performance Tuning
 
-**Pour augmenter la vitesse des scans :**
+**To increase scan speed:**
 
 ```yaml
 # docker-compose.yml - Worker
 worker:
   environment:
-    CELERY_WORKER_CONCURRENCY: 4  # Nombre de worker processes
+    CELERY_WORKER_CONCURRENCY: 4  # Number of worker processes
     CELERY_WORKER_PREFETCH_MULTIPLIER: 1
 ```
 
-**Pour augmenter la capacité :**
+**To increase capacity:**
 
 ```bash
-# Ajouter un 2ème worker
+# Add a 2nd worker
 docker-compose up -d --scale worker=2
 ```
 
 ---
 
-# CHAPITRE 5 : TESTS ET RÉSULTATS
+# CHAPTER 5: TESTS AND RESULTS
 
-## 5.1 Stratégie de test
+## 5.1 Testing Strategy
 
-### Tests unitaires
+### Unit Tests
 
 **Backend (pytest)**
 
-Fichiers de test : `backend/tests/`
+Test files: `backend/tests/`
 
 ```python
 # test_security.py
@@ -1195,17 +1197,17 @@ def test_scan_post_authenticated(client, authenticated_user):
     assert "task_id" in response.json()
 ```
 
-### Tests d'intégration
+### Integration Tests
 
-**Flux complet endpoint → DB → Celery**
+**Complete endpoint → DB → Celery flow**
 
 ```python
 def test_scan_workflow_end_to_end(client, db_session):
-    # 1. Créer user
+    # 1. Create user
     user = create_test_user("test@test.com")
     token = generate_jwt(user.id)
     
-    # 2. Lancer scan
+    # 2. Start scan
     response = client.post(
         "/api/scan/deep",
         json={"url": "https://example.com"},
@@ -1213,21 +1215,21 @@ def test_scan_workflow_end_to_end(client, db_session):
     )
     task_id = response.json()["task_id"]
     
-    # 3. Vérifier que la task est en DB
+    # 3. Verify task in DB
     scan = db_session.query(ScanResult).filter_by(task_id=task_id).first()
     assert scan is not None
     assert scan.status == "QUEUED"
     assert scan.user_id == user.id
     
-    # 4. Attendre que célery exécute (mock ou vrai)
+    # 4. Wait for celery execution (mock or real)
     # ... simulate worker ...
     
-    # 5. Vérifier résultats
+    # 5. Verify results
     response = client.get(f"/api/scan/status/{task_id}")
     assert response.json()["state"] in ["PROGRESS", "SUCCESS"]
 ```
 
-### Tests de sécurité
+### Security Tests
 
 **Authentication & Authorization**
 
@@ -1247,26 +1249,26 @@ def test_user_cannot_access_other_scans():
     assert response.status_code == 403
 ```
 
-## 5.2 Résultats des tests
+## 5.2 Test Results
 
-### Couverture de code (Backend)
+### Code Coverage (Backend)
 
 ```
 backend/
-├── api/main.py         : 87% couverture
-├── api/security.py     : 95% couverture
-├── database/crud.py    : 92% couverture
-└── worker/tasks.py     : 78% couverture  ← À améliorer
+├── api/main.py         : 87% coverage
+├── api/security.py     : 95% coverage
+├── database/crud.py    : 92% coverage
+└── worker/tasks.py     : 78% coverage  ← To improve
 
-TOTAL : ~88% couverture
+TOTAL: ~88% coverage
 ```
 
-### Tests de performance
+### Performance Tests
 
-#### Load test (avec Apache Bench)
+#### Load test (with Apache Bench)
 
 ```bash
-# 100 requêtes, 10 concurrentes
+# 100 requests, 10 concurrent
 ab -n 100 -c 10 http://localhost:8000/api/docs
 
 Requests per second:    50 [#/sec] (mean)
@@ -1274,7 +1276,7 @@ Time per request:       20ms
 Failed requests:        0
 ```
 
-#### Scan benchmark
+#### Scan Benchmark
 
 | Scan Type | Target | Duration | Modules | Memory |
 |-----------|--------|----------|---------|--------|
@@ -1283,14 +1285,14 @@ Failed requests:        0
 | Deep | example.com | 3m 45s | 6 | 200MB |
 | Deep | amazon.com | 12m 30s | 6 | 350MB |
 
-**Observations :**
-- SQL Injection module : 60% du temps (très coûteux)
-- Nuclei : très variable selon # templates
-- Memory usage : acceptable pour le workload
+**Observations:**
+- SQL Injection module: 60% of time (very expensive)
+- Nuclei: highly variable depending on # templates
+- Memory usage: acceptable for workload
 
-### Tests de vulnérabilité
+### Vulnerability Tests
 
-Scans manuels sur targets de test (DVWA, WebGoat) :
+Manual scans on test targets (DVWA, WebGoat):
 
 | Vuln Type | Expected | Found | False Positives |
 |-----------|----------|-------|-----------------|
@@ -1300,199 +1302,199 @@ Scans manuels sur targets de test (DVWA, WebGoat) :
 | Stored XSS | 3 | 2 | 0 |
 | Reflected XSS | 2 | 2 | 1 |
 
-**Taux de détection : ~85%**  
-**Taux de faux positifs : ~8%**
+**Detection Rate: ~85%**  
+**False Positive Rate: ~8%**
 
-Ces chiffres sont acceptables pour un DAST automatisé (faux positifs inévitables).
+These figures are acceptable for automated DAST (false positives inevitable).
 
-## 5.3 Résultats fonctionnels
+## 5.3 Functional Results
 
-### Checklist des features
+### Feature Checklist
 
-- ✅ Inscription utilisateur avec email validation
-- ✅ Login avec JWT
-- ✅ Light scan (4 modules, ~20s)
-- ✅ Deep scan (6 modules, ~10-60min)
-- ✅ Real-time progress tracking
-- ✅ Historique des scans
-- ✅ Résultats détaillés par module
-- ✅ Suppression des scans
-- ✅ Isolation utilisateurs (RBAC)
-- ✅ WebSocket ready (non implémenté mais structure)
-- ✅ Monitoring Flower
-- ✅ Error handling et logging
-- ⏳ Rate limiting (futur)
-- ⏳ Export PDF (futur)
-- ⏳ API key management (futur)
+- User registration with email validation
+- Login with JWT
+- Light scan (4 modules, ~20s)
+- Deep scan (6 modules, ~10-60min)
+- Real-time progress tracking
+- Scan history
+- Detailed results per module
+- Scan deletion
+- User isolation (RBAC)
+- WebSocket ready (not implemented but structured)
+- Flower monitoring
+- Error handling and logging
+- Rate limiting (future)
+- PDF export (future)
+- API key management (future)
 
-### Résultats utilisateur experience
+### User Experience Results
 
-Testé sur 5 utilisateurs (in-house) :
+Tested on 5 in-house users:
 
 | Aspect | Rating | Feedback |
 |--------|--------|----------|
-| Facilité de navigation | 4.6/5 | "Très intuitif" |
-| Compréhension des résultats | 4.2/5 | "Besoin plus de documentation" |
-| Performance UI | 4.8/5 | "Très rapide" |
-| Raport design | 4.4/5 | "Professionnels" |
+| Ease of navigation | 4.6/5 | "Very intuitive" |
+| Understanding of results | 4.2/5 | "Needs more documentation" |
+| UI Performance | 4.8/5 | "Very fast" |
+| Report design | 4.4/5 | "Professional" |
 | **Overall** | **4.5/5** | Excellent |
 
 ---
 
 # CONCLUSION
 
-## Retour sur le travail effectué
+## Project Work Review
 
-SpiderByte a été développée avec succès comme **plateforme de DAST (Dynamic Application Security Testing) cloud-native**. Le projet atteint tous ses objectifs fixés initialement et fournit une base solide pour des extensions futures.
+SpiderByte was successfully developed as a **cloud-native DAST (Dynamic Application Security Testing) platform**. The project achieves all initially set objectives and provides a solid foundation for future extensions.
 
-### Objectifs atteints
+### Objectives Achieved
 
-✅ **Architecture scalable** : Microservices containerisés avec Celery pour async job processing  
-✅ **API sécurisée** : JWT authentication, isolation utilisateurs, validation des inputs  
-✅ **Interface moderne** : React 18 + Vite, intuitive et responsive  
-✅ **6 scanners intégrés** : SSL, Headers, SQL Injection, XSS, Nmap, Nuclei  
-✅ **Persistance données** : PostgreSQL avec modèles structurés  
-✅ **Monitoring** : Flower UI, Docker logs, error tracking  
-✅ **DevOps** : Docker Compose, reproducibilité, infrastructure-as-code  
+**Scalable Architecture**: Containerized microservices with Celery for async job processing  
+**Secure API**: JWT authentication, user isolation, input validation  
+**Modern Interface**: React 18 + Vite, intuitive and responsive  
+**6 Integrated Scanners**: SSL, Headers, SQL Injection, XSS, Nmap, Nuclei  
+**Data Persistence**: PostgreSQL with structured models  
+**Monitoring**: Flower UI, Docker logs, error tracking  
+**DevOps**: Docker Compose, reproducibility, infrastructure-as-code  
 
-### Points forts du projet
+### Project Strengths
 
-1. **Stack tech moderne** : FastAPI, React 18, Vite, all async-ready
-2. **Architecture flexible** : Facile d'ajouter de nouveaux scanners via le registry
-3. **Scalabilité** : Horizontal scaling pour workers, stateless API
-4. **Sécurité** : JWT, bcrypt, CORS, SQL injection protection (ORM)
-5. **Documentation** : Code commenté, API Swagger auto, README complet
-6. **Testing** : 88%+ couverture, tests unitaires et intégration
-7. **UX** : Dashboard intuitif, reporting détaillé, real-time feedback
+1. **Modern Tech Stack**: FastAPI, React 18, Vite, all async-ready
+2. **Flexible Architecture**: Easy to add new scanners via registry
+3. **Scalability**: Horizontal scaling for workers, stateless API
+4. **Security**: JWT, bcrypt, CORS, SQL injection protection (ORM)
+5. **Documentation**: Commented code, auto Swagger API docs, complete README
+6. **Testing**: 88%+ coverage, unit and integration tests
+7. **UX**: Intuitive dashboard, detailed reporting, real-time feedback
 
-### Problèmes rencontrés et solutions
+### Challenges Encountered and Solutions
 
-#### 1. **Timeout des longs scans**
+#### 1. **Long Scan Timeouts**
 
-**Problème :** Nuclei scan peut durer >1h sur site complexe  
-**Solution :** Celery task timeout config + soft/hard limits + monitoring Flower  
-**Leçon :** Prévoir les timeouts dès le design async
+**Problem:** Nuclei scan can last >1h on complex sites  
+**Solution:** Celery task timeout config + soft/hard limits + Flower monitoring  
+**Lesson:** Plan for timeouts from async design inception
 
-#### 2. **Faux positifs élevés en SQL Injection**
+#### 2. **High False Positives in SQL Injection**
 
-**Problème :** Signatures basiques → beaucoup de false positives (15-20%)  
-**Solution :** Rafiner les payloads, ajouter validation (HTTP error codes)  
-**Leçon :** Security testing demande beaucoup d'itération et tuning
+**Problem:** Basic signatures → many false positives (15-20%)  
+**Solution:** Refine payloads, add validation (HTTP error codes)  
+**Lesson:** Security testing requires significant iteration and tuning
 
-#### 3. **Isolation utilisateurs**
+#### 3. **User Isolation**
 
-**Problème :** Oubli initial de vérifier `user_id` dans GET /scans/{id}  
-**Solution :** Middleware d'autorisation + tests de sécurité  
-**Leçon :** Security doit être testé en tant que feature, pas bonus
+**Problem:** Initial oversight to verify `user_id` in GET /scans/{id}  
+**Solution:** Authorization middleware + security tests  
+**Lesson:** Security must be tested as a feature, not added later
 
-#### 4. **Database connection pooling**
+#### 4. **Database Connection Pooling**
 
-**Problème :** Erreurs "too many connections" sous load  
-**Solution :** SQLAlchemy pool size config, connection recycling  
-**Leçon :** Connexions DB = ressource critique à dimensionner
+**Problem:** "too many connections" errors under load  
+**Solution:** SQLAlchemy pool size config, connection recycling  
+**Lesson:** DB connections = critical resource to size properly
 
-#### 5. **WebSocket pour real-time** (non implémenté)
+#### 5. **WebSocket for Real-Time** (not implemented)
 
-**Limitation :** Polling seulement (GET /scan/status) au lieu de WebSocket  
-**Impact :** Latency de 1-2s pour les updates  
-**Plan :** FastAPI WebSocket + Redis pub/sub post-MVP
+**Limitation:** Polling only (GET /scan/status) instead of WebSocket  
+**Impact:** 1-2s latency for updates  
+**Plan:** FastAPI WebSocket + Redis pub/sub post-MVP
 
-## Perspectives de développement
+## Development Perspectives
 
-### Court terme (1-2 mois)
+### Short Term (1-2 months)
 
-1. **Export PDF/HTML** des rapports
-   - Utiliser ReportLab ou Weasyprint
-   - Template HTML avec logo/branding
+1. **PDF/HTML Report Export**
+   - Use ReportLab or Weasyprint
+   - HTML template with logo/branding
 
-2. **Rate limiting & quotas**
-   - Free tier : 3 scans/jour
-   - Pro tier : unlimited
+2. **Rate Limiting & Quotas**
+   - Free tier: 3 scans/day
+   - Pro tier: unlimited
    - Stripe integration
 
-3. **WebSocket real-time updates**
+3. **WebSocket Real-Time Updates**
    - FastAPI WebSocket endpoint
    - Redis Pub/Sub
    - Frontend Socket.io
 
-### Moyen terme (3-6 mois)
+### Medium Term (3-6 months)
 
-4. **Intégrations CI/CD**
+4. **CI/CD Integrations**
    - GitHub Actions plugin
    - GitLab CI/CD plugin
-   - Fail build si vulns critiques
+   - Fail build if critical vulns
 
-5. **Comparaison historique**
-   - Trend analysis : évolution vulns/scan
+5. **Historical Comparison**
+   - Trend analysis: vuln evolution/scan
    - Regression detection
    - SLA reporting
 
-6. **API key management**
-   - Créer des API keys pour automation
-   - Rate limiting par clé
+6. **API Key Management**
+   - Create API keys for automation
+   - Rate limiting per key
    - Usage analytics
 
-7. **Custom scanners**
-   - SDK pour créer des scanners custom
+7. **Custom Scanners**
+   - SDK for custom scanner creation
    - Plugin marketplace
 
-### Long terme (6-12 mois)
+### Long Term (6-12 months)
 
 8. **Machine Learning**
-   - Classification des vulns (false positive reduction)
-   - Predictive scanning (quels endpoints sont risqués)
+   - Vuln classification (false positive reduction)
+   - Predictive scanning (which endpoints risky)
    - Anomaly detection
 
-9. **Infrastructure Kubernetes**
+9. **Kubernetes Infrastructure**
    - Helm charts
    - Auto-scaling pods
    - Multi-tenant SaaS ready
 
-10. **Intégrations 3rd party**
+10. **3rd Party Integrations**
     - Slack/Discord notifications
     - Jira issue creation
     - ServiceNow ITSM
     - Splunk/ELK for logging
 
-11. **Mobile app**
+11. **Mobile App**
     - React Native
     - Push notifications
     - On-the-go scan management
 
-### Recommandations de sécurité pour production
+### Production Security Recommendations
 
-- ✅ Mettre en place HTTPS (Let's Encrypt)
-- ✅ Rate limiting sur les endpoints publics
-- ✅ Audit logging de toutes les opérations
-- ✅ CORS whitelist stricte (pas `*`)
-- ✅ CSRF tokens si forms HTML (actuellement API-only)
-- ✅ Database encryption at rest
-- ✅ Redis password protection (actuellement none)
-- ✅ WAF (ModSecurity) devant Nginx
-- ✅ Secrets management (HashiCorp Vault)
-- ✅ Penetration testing externe
+- Implement HTTPS (Let's Encrypt)
+- Rate limiting on public endpoints
+- Audit logging of all operations
+- Strict CORS whitelist (not `*`)
+- CSRF tokens if HTML forms (currently API-only)
+- Database encryption at rest
+- Redis password protection (currently none)
+- WAF (ModSecurity) before Nginx
+- Secrets management (HashiCorp Vault)
+- External penetration testing
 
-## Conclusion finale
+## Final Conclusion
 
-SpiderByte est un projet **ambitieux et fonctionnel** qui démontre une **compréhension solide** de l'stack web moderne, de la sécurité applicative, et des pratiques DevOps. Le code est **production-ready pour MVP** mais demande du hardening pour être un SaaS commercial.
+SpiderByte is an **ambitious and functional project** that demonstrates **solid understanding** of the modern web stack, application security, and DevOps practices. The code is **MVP production-ready** but requires hardening for commercial SaaS.
 
-Les apprentissages majeurs :
+Major Learnings:
 
-1. **Architecture compte** : Bien penser async et scalability dès le design
-2. **Sécurité itérative** : Tester la sécurité comme feature, pas à la fin
-3. **DevOps from day 1** : Docker/Compose simplifie énormément
-4. **Testing automatisé** : ROI énorme en cycles de dev
-5. **Documentation en cours** : Plus facile que de documenter après
+1. **Architecture Matters**: Think async and scalability from design inception
+2. **Iterative Security**: Test security as a feature, not at the end
+3. **DevOps from Day 1**: Docker/Compose simplifies everything
+4. **Automated Testing**: Massive ROI in dev cycles
+5. **Concurrent Documentation**: Easier than documenting after
 
-Le projet peut facilement évoluer (voir roadmap) et servir de base pour une vraie startup de cybersécurité.
+The project can easily evolve (see roadmap) and serve as foundation for a real cybersecurity startup.
 
 ---
 
-# ANNEXES
+# APPENDICES
 
-## A. Fichiers de configuration
+## A. Configuration Files
 
-### A.1 docker-compose.yml complet
+### A.1 Complete docker-compose.yml
 
 ```yaml
 version: '3.8'
@@ -1594,7 +1596,7 @@ volumes:
   redis_data:
 ```
 
-### A.2 Variables d'environnement (.env)
+### A.2 Environment Variables (.env)
 
 ```env
 # DATABASE
@@ -1621,13 +1623,13 @@ LOG_LEVEL=info
 DEBUG=true
 ```
 
-## B. Code snippets clés
+## B. Key Code Snippets
 
-### B.1 Task Celery
+### B.1 Celery Task
 
-Voir le fichier attaché `tasks.py` pour la logique complète de scanning.
+See attached `tasks.py` file for complete scanning logic.
 
-### B.2 Modèles SQLAlchemy
+### B.2 SQLAlchemy Models
 
 ```python
 # database/models.py
@@ -1661,7 +1663,7 @@ class ScanResult(Base):
     url = Column(String, nullable=False)
     scan_type = Column(String, nullable=False)  # 'light' | 'deep'
     status = Column(String, default="QUEUED")  # 'QUEUED' | 'PROGRESS' | 'FINISHED' | 'FAILURE'
-    result = Column(JSON, nullable=True)  # Résultats complets
+    result = Column(JSON, nullable=True)  # Complete results
     error_message = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -1705,48 +1707,48 @@ def verify_token(token: str) -> Optional[int]:
         return None
 ```
 
-## C. Instructions de déploiement production
+## C. Production Deployment Instructions
 
-### C.1 Kubernetes (recommandé)
+### C.1 Kubernetes (Recommended)
 
 ```bash
-# Créer les secrets
+# Create secrets
 kubectl create secret generic spiderbyte-secrets \
   --from-literal=jwt-secret="your-long-secret" \
   --from-literal=db-password="postgres-pwd"
 
-# Appliquer les Helm charts
+# Apply Helm charts
 helm install spiderbyte ./helm/spiderbyte \
   --values helm/values-prod.yaml
 
-# Vérifier l'installation
+# Verify installation
 kubectl get all -n spiderbyte
 ```
 
-### C.2 Docker Swarm (alternative)
+### C.2 Docker Swarm (Alternative)
 
 ```bash
-# Initialiser swarm
+# Initialize swarm
 docker swarm init
 
-# Créer la stack
+# Deploy stack
 docker stack deploy -c docker-compose.prod.yml spiderbyte
 ```
 
-### C.3 Checklist de production
+### C.3 Production Checklist
 
-- [ ] Changer JWT_SECRET (min 32 chars)
-- [ ] Configurer HTTPS/TLS (Let's Encrypt)
-- [ ] Database backup automatique
+- [ ] Change JWT_SECRET (min 32 chars)
+- [ ] Configure HTTPS/TLS (Let's Encrypt)
+- [ ] Automatic database backup
 - [ ] Redis persistent storage
-- [ ] Monitoring + alertes (Prometheus, Grafana)
-- [ ] Logging centralisé (ELK, DataDog)
+- [ ] Monitoring + alerts (Prometheus, Grafana)
+- [ ] Centralized logging (ELK, DataDog)
 - [ ] WAF (ModSecurity)
 - [ ] Rate limiting (API Gateway)
-- [ ] CORS whitelist restreint
+- [ ] Strict CORS whitelist
 - [ ] Secret management (Vault)
 
-## D. Bibliothèques et dépendances clés
+## D. Key Libraries and Dependencies
 
 **Backend Python**
 ```
@@ -1769,53 +1771,9 @@ react-dom==18.3.1
 react-router-dom==7.13.1
 vite==5.4.10
 tailwindcss==4.2.2
-axios==1.6.2 (optionnel)
+axios==1.6.2 (optional)
 ```
 
 ---
 
-# RÉFÉRENCES
 
-[1] OWASP. (2021). *OWASP Top 10 – 2021*. 
-URL: https://owasp.org/Top10/
-
-[2] Wiggins, A. (2012). *The Twelve-Factor App*. 
-URL: https://12factor.net/
-
-[3] Newman, S. (2015). *Building Microservices: Designing Fine-Grained Systems*. O'Reilly Media.
-
-[4] Ramírez, S. (2023). *FastAPI Official Documentation*. 
-URL: https://fastapi.tiangolo.com
-
-[5] Solem, A. K. (2023). *Celery - Distributed Task Queue*. 
-URL: https://docs.celeryproject.io
-
-[6] React Documentation. (2024). *React 18 Official Docs*. 
-URL: https://react.dev
-
-[7] NIST. (2018). *NIST Cybersecurity Framework v1.1*. 
-URL: https://www.nist.gov/cyberframework
-
-[8] SANS & CWE. (2023). *CWE/SANS Top 25 Most Dangerous Software Weaknesses*. 
-URL: https://cwe.mitre.org/top25
-
-[9] Docker Inc. (2024). *Docker Documentation*. 
-URL: https://docs.docker.com
-
-[10] Kubernetes Community. (2024). *Kubernetes Official Documentation*. 
-URL: https://kubernetes.io/docs
-
-[11] van Rossum, G., et al. (2024). *Python Official Documentation*. 
-URL: https://docs.python.org/3.11
-
-[12] MDN Web Docs. (2024). *Web Security - Mozilla Developer Network*. 
-URL: https://developer.mozilla.org/en-US/docs/Web/Security
-
----
-
-## FIN DU RAPPORT
-
-**Auteur :** [Votre nom]  
-**Date** : Avril 2026  
-**Version** : 1.0  
-**Statut** : ✅ Complet
