@@ -14,7 +14,7 @@ export default function HeroSection({ onStartScan, isLaunching }) {
     <section className="grid items-start gap-8 lg:grid-cols-[1.08fr_0.92fr]">
       <div className="space-y-7">
         <span className="inline-flex items-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-1 text-xs uppercase tracking-[0.24em] text-yellow-300">
-          Academic Cybersecurity Project
+          Automated Web Vulnerability Scanner
         </span>
 
         <div className="space-y-4">

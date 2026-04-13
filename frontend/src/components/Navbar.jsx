@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ChevronDownIcon, SpiderIcon, UserCircleIcon } from "./icons";
+import logo from '../assets/logo.png';
 
 function menuLinkClass({ isActive }) {
   const base =
@@ -56,11 +57,19 @@ export default function Navbar() {
 
   return (
     <header className="soft-ring glass-panel flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-      <Link to="/" className="group inline-flex items-center gap-3">
+      {/* <Link to="/" className="group inline-flex items-center gap-3">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400 text-black shadow-[0_8px_24px_rgba(250,204,21,0.35)] transition-transform duration-300 group-hover:scale-105">
           <SpiderIcon className="h-5 w-5" />
         </span>
         <span className="text-lg font-semibold tracking-wide text-zinc-100">SpiderByte</span>
+      </Link> */}
+      <Link to="/" className="group inline-flex items-center gap-3">
+       <img 
+        src={logo} 
+        alt="SpiderByte logo" 
+        style={{ height: '40px', width: '40px', borderRadius: '12px' }} 
+       />
+       <span className="text-lg font-semibold tracking-wide text-zinc-100">SpiderByte</span>
       </Link>
 
       <nav className="hidden items-center gap-7 md:flex">
