@@ -9,6 +9,11 @@
 SpiderByte est une plateforme de scanning de sécurité web (DAST — Dynamic Application Security Testing) orientée Cloud-Native. Elle permet d'auditer les vulnérabilités d'applications web modernes via une interface full-stack avec authentification, gestion des résultats en temps réel et scans parallélisés.
 
 ---
+##  Démo en action
+
+
+https://github.com/user-attachments/assets/00f4b747-ac02-4ed7-aa89-d9080a200a8e
+
 
 ## Table des matières
 
