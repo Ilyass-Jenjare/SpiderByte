@@ -370,28 +370,7 @@ Ne commitez jamais le fichier `.env`. Il est listé dans `.gitignore`.
 | Orchestration      | Docker Compose           |
 | Sécurité           | JWT, bcrypt, CORS        |
 
----
 
-## Roadmap
-
-- [x] Authentification JWT (inscription, connexion)
-- [x] Scan léger (SSL, headers, Nmap)
-- [x] Scan approfondi (SQL injection, XSS, Nuclei)
-- [x] Gestion asynchrone des scans (Celery + Redis)
-- [x] Historique des scans par utilisateur
-- [x] Dashboard Celery (Flower)
-- [ ] Export des rapports en PDF
-- [ ] Notifications par email à la fin d'un scan
-- [ ] Authentification à deux facteurs (2FA)
-- [ ] Gestion des rôles et permissions (RBAC)
-- [ ] Dashboard avec graphiques et statistiques
-- [ ] Comparaison de scans (avant / après)
-- [ ] Rate limiting par utilisateur
-- [ ] Scaling horizontal des workers Celery
-- [ ] Pipeline CI/CD (GitHub Actions)
-- [ ] Monitoring (Prometheus + Grafana)
-
----
 
 ## Avertissement légal
 
